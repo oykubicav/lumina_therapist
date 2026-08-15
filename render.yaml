@@ -19,7 +19,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     region: frankfurt        # EU
-    plan: starter            # $7/ay, uyumaz. Test için "free" (uyur, cold start ~30 sn)
+    plan: free               # Ücretsiz — 15 dk inaktif kalırsa uyur, ilk istekte ~50 sn cold start
     branch: main
     healthCheckPath: /health
     # Migration her deploy'da alembic tarafından uygulanır (idempotent).
@@ -79,5 +79,5 @@ databases:
     databaseName: cbt
     user: cbt
     region: frankfurt
-    plan: basic-256mb        # $7/ay, 256MB RAM, 1GB storage. MVP için yeter.
+    plan: free               # Ücretsiz — 1GB storage, 90 gün sonra silinir (re-migrate lazım)
     ipAllowList: []          # sadece Render internal — dış erişim yok (güvenli)
