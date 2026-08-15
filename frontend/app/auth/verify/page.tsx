@@ -1,12 +1,26 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { postVerify } from "@/lib/api";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { postResendVerify } from "@/lib/api";
 
+// Next.js 14 requires useSearchParams to be inside a Suspense boundary
+// during static generation. Wrap the actual logic in a child component.
 export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-cbt-bg dark:bg-cbt-dark-bg p-4">
+        <Loader2 className="animate-spin text-cbt-accent" size={32} />
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
+  );
+}
+
+function VerifyContent() {
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
     const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
