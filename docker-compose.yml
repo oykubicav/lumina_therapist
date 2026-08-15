@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cbt-db
+    ports:
+      # Host'ta 5433 → container'da 5432. macOS'ta Homebrew Postgres
+      # zaten 5432'yi tutuyor olabilir, çakışmayı önlüyoruz.
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=${CBT_DB_USER:-cbt}
+      - POSTGRES_PASSWORD=${CBT_DB_PASSWORD:-cbt}
+      - POSTGRES_DB=${CBT_DB_NAME:-cbt}
+    volumes:
+      - cbt_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CBT_DB_USER:-cbt} -d ${CBT_DB_NAME:-cbt}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cbt-api:local
+    container_name: cbt-api
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # LLM
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CBT_LLM_PROVIDER=${CBT_LLM_PROVIDER:-anthropic}
+      - CBT_MODEL_COMPOSER=${CBT_MODEL_COMPOSER:-claude-sonnet-4-6}
+      - CBT_MODEL_INTENT=${CBT_MODEL_INTENT:-claude-haiku-4-5-20251001}
+      - CBT_MODEL_CRITIC=${CBT_MODEL_CRITIC:-claude-haiku-4-5-20251001}
+      # DB
+      - CBT_DB_HOST=db
+      - CBT_DB_PORT=5432
+      - CBT_DB_USER=${CBT_DB_USER:-cbt}
+      - CBT_DB_PASSWORD=${CBT_DB_PASSWORD:-cbt}
+      - CBT_DB_NAME=${CBT_DB_NAME:-cbt}
+      # Session
+      - CBT_HASH_SALT=${CBT_HASH_SALT:-CHANGE-ME-IN-PROD}
+      - CBT_SESSION_TTL_SECONDS=${CBT_SESSION_TTL_SECONDS:-3600}
+      - CBT_POLICY_VERSION=${CBT_POLICY_VERSION:-0.2}
+      # Admin
+      - CBT_ADMIN_TOKEN=${CBT_ADMIN_TOKEN:-}
+      # CORS
+      - CBT_CORS_ORIGINS=${CBT_CORS_ORIGINS:-http://localhost:3000}
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./evals/results:/app/evals/results
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+  neo4j:
+    image: neo4j:5-community
+    container_name: cbt-neo4j
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    
+    environment:
+      - NEO4J_AUTH=neo4j/${CBT_NEO4J_PASSWORD}
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - cbt_neo4jdata:/data
+      - cbt_neo4jlogs:/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  cbt_pgdata:
+  cbt_neo4jdata:
+  cbt_neo4jlogs:

@@ -1,0 +1,83 @@
+# Render Blueprint — CBT Destek backend + Postgres.
+#
+# Kullanım:
+#   1) Repo'yu GitHub'a push et.
+#   2) Render dashboard → "New +" → "Blueprint" → repo seç.
+#   3) Render bu dosyayı okur, servisleri otomatik kurar.
+#   4) İlk deploy sırasında Render "sync" moduna girer — sabırla bekle (~5-8 dk).
+#   5) Env var'ları set et (aşağıdaki sync: false olanlar dashboard'dan girilir).
+#
+# KVKK: region=frankfurt seçildi (EU / GDPR). TR-özgü katı residency isterse
+# Turkcell Cloud / lokal VPS'e taşımak gerekir.
+
+services:
+  # ==============================================================
+  # Backend — FastAPI (Docker)
+  # ==============================================================
+  - type: web
+    name: cbt-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: frankfurt        # EU
+    plan: starter            # $7/ay, uyumaz. Test için "free" (uyur, cold start ~30 sn)
+    branch: main
+    healthCheckPath: /health
+    # Migration her deploy'da alembic tarafından uygulanır (idempotent).
+    preDeployCommand: alembic upgrade head
+    envVars:
+      # ─── LLM ──────────────────────────────────────
+      - key: ANTHROPIC_API_KEY
+        sync: false          # dashboard'dan gir (secret)
+      - key: CBT_LLM_PROVIDER
+        value: anthropic
+      - key: CBT_MODEL_COMPOSER
+        value: claude-sonnet-4-6
+      - key: CBT_MODEL_INTENT
+        value: claude-haiku-4-5-20251001
+      - key: CBT_MODEL_CRITIC
+        value: claude-haiku-4-5-20251001
+
+      # ─── Database (otomatik Postgres bağlantısı) ──
+      - key: CBT_DB_URL
+        fromDatabase:
+          name: cbt-postgres
+          property: connectionString
+
+      # ─── Session + KVKK ──────────────────────────
+      - key: CBT_HASH_SALT
+        generateValue: true   # Render güvenli random üretir
+      - key: CBT_SESSION_TTL_SECONDS
+        value: "3600"
+      - key: CBT_POLICY_VERSION
+        value: "0.2"
+
+      # ─── Admin ────────────────────────────────────
+      - key: CBT_ADMIN_TOKEN
+        generateValue: true
+
+      # ─── CORS ─────────────────────────────────────
+      # NOT: Vercel frontend deploy edilince buraya URL'i ekle
+      # (dashboard'dan güncelleyebilirsin, redeploy'a gerek yok)
+      - key: CBT_CORS_ORIGINS
+        sync: false           # örn: https://cbt-destek.tr,https://www.cbt-destek.tr
+
+      # ─── Logging ──────────────────────────────────
+      - key: LOG_LEVEL
+        value: INFO
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+      # ─── Embedding ────────────────────────────────
+      - key: CBT_PREFER_ST
+        value: "0"            # TF-IDF fallback (v05 eval'de daha iyi çıkmıştı)
+
+# ==============================================================
+# Managed Postgres
+# ==============================================================
+databases:
+  - name: cbt-postgres
+    databaseName: cbt
+    user: cbt
+    region: frankfurt
+    plan: basic-256mb        # $7/ay, 256MB RAM, 1GB storage. MVP için yeter.
+    ipAllowList: []          # sadece Render internal — dış erişim yok (güvenli)

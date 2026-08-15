@@ -1,0 +1,23 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.DS_Store
+
+evals/clinician_review/*
+evals/results/           # tüm dosyalar
+evals/*.jsonl   
+
+# Docs, IDE
+*.md
+!README.md
+.vscode
+.idea
+
+# Local dev artifacts
+pipeline/_embed_cache_*.npz
