@@ -75,4 +75,6 @@ HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s \
 
 # Startup: önce migration (idempotent), sonra API. Free tier'da
 # preDeployCommand yok, o yüzden migration'ı container start'ında yapıyoruz.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 2"]
+# Port: Render $PORT=10000 set eder; lokal Docker'da default 8000.
+# Workers: free tier 512 MB RAM — tek worker.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
