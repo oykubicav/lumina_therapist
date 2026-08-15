@@ -2,151 +2,156 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { postResendVerify } from "@/lib/api";
+import { CheckCircle } from "lucide-react";
 
 export default function RegisterPage() {
   const { register } = useAuth();
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [done, setDone] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
     try {
-        await register(email, password);
-        setSuccessMessage(
-  "Hesabın oluşturuldu. E-postana bir doğrulama linki gönderdik — kutunu kontrol et. " +
-  "Linke tıkladıktan sonra giriş yapabilirsin."
-);
+      await register(email, password);
+      setDone(true);
     } catch (err: any) {
-      setError(err?.message || "Kayıt başarısız oldu.");
+      setError(err?.message || "Kayıt tamamlanamadı. Lütfen tekrar dene.");
     } finally {
       setSubmitting(false);
     }
   };
-  if (successMessage) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-cbt-bg dark:bg-cbt-dark-bg p-4">
-      <div className="max-w-md text-center">
-        {/* Check ikonu */}
-        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
 
-        {/* Ana başlık */}
-        <h2 className="text-xl font-medium text-cbt-text dark:text-cbt-dark-text mb-3">
-          E-postana bir link gönderdik
-        </h2>
-
-        {/* Success mesajı — successMessage state'inden gelir */}
-        <p className="text-sm text-cbt-textSecondary mb-4 leading-relaxed">
-          {successMessage}
-        </p>
-
-        {/* YENİ — spam uyarısı */}
-        <p className="text-xs text-cbt-textMuted mb-6">
-          Email gelmediyse spam / gereksiz kutunu da kontrol et.
-        </p>
-
-        {/* Buton metni değişti */}
-        <Link
-          href="/login"
-          className="inline-block px-6 py-3 rounded-xl bg-cbt-accent text-white font-medium"
-        >
-          E-postamı doğruladım — Giriş yap
-        </Link>
-      </div>
-    </div>
-  );
-}
-
- 
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-cbt-bg dark:bg-cbt-dark-bg p-4">
-      <div className="w-full max-w-md">
-        <h1 className="text-2xl font-medium text-cbt-text dark:text-cbt-dark-text mb-2 text-center">
-          Hesap oluştur
-        </h1>
-        <p className="text-sm text-cbt-textMuted text-center mb-8">
-          İlerlemeni takip etmek ve geçmişini saklamak için
-        </p>
-
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-cbt-dark-surface rounded-2xl p-6 shadow-soft space-y-4">
-          <div>
-            <label className="block text-xs text-cbt-textMuted mb-1">E-posta</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-cbt-border dark:border-cbt-dark-border bg-transparent text-cbt-text dark:text-cbt-dark-text focus:outline-none focus:border-cbt-accent"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-cbt-textMuted mb-1">
-              Şifre <span className="text-cbt-textMuted">(en az 8 karakter)</span>
-            </label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              maxLength={128}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-cbt-border dark:border-cbt-dark-border bg-transparent text-cbt-text dark:text-cbt-dark-text focus:outline-none focus:border-cbt-accent"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
-
-          {}
-          <div className="text-right">
-            <button
-              type="button" // Formun submit olmasını engellemek için type="button" çok önemlidir!
-              onClick={async () => {
-                await postResendVerify(email);
-              }}
-              className="text-xs text-cbt-accent hover:underline"
-            >
-              E-posta gelmediyse tekrar yolla
-            </button>
-          </div>
-          {}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 rounded-xl bg-cbt-accent text-white font-medium disabled:opacity-50"
+  if (done) {
+    return (
+      <div className="min-h-screen flex flex-col bg-cbt-bg dark:bg-cbt-dark-bg">
+        <header className="px-6 py-5">
+          <Link
+            href="/"
+            className="text-[17px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text"
           >
-            {submitting ? "Kayıt oluşturuluyor..." : "Hesap oluştur"}
-          </button>
+            Neva
+          </Link>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-6 pb-24">
+          <div className="max-w-sm text-center">
+            <CheckCircle
+              size={44}
+              strokeWidth={1.5}
+              className="mx-auto mb-6 text-cbt-success dark:text-cbt-dark-success"
+            />
+            <h2 className="text-[24px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-3">
+              E-postanı kontrol et
+            </h2>
+            <p className="text-[14px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed mb-2">
+              <span className="font-medium text-cbt-text dark:text-cbt-dark-text">{email}</span>{" "}
+              adresine bir doğrulama bağlantısı gönderdik. Bağlantıya
+              tıkladıktan sonra giriş yapabilirsin.
+            </p>
+            <p className="text-[13px] text-cbt-textMuted dark:text-cbt-dark-textMuted mb-8">
+              E-posta görünmüyorsa spam klasörüne de bak.
+            </p>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center px-7 h-12 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 transition-opacity"
+            >
+              Doğruladım, giriş yap
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
-          <p className="text-xs text-cbt-textMuted leading-relaxed pt-2">
-            Kayıt olurken KVKK ve kullanım politikalarımızı kabul etmiş olursun.
-            İstediğin zaman hesabını silebilirsin.
+  return (
+    <div className="min-h-screen flex flex-col bg-cbt-bg dark:bg-cbt-dark-bg">
+      <header className="px-6 py-5">
+        <Link
+          href="/"
+          className="text-[17px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text"
+        >
+          Neva
+        </Link>
+      </header>
+
+      <main className="flex-1 flex items-center justify-center px-6 pb-24">
+        <div className="w-full max-w-sm">
+          <h1 className="text-[28px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-2 text-center">
+            Hesap oluştur
+          </h1>
+          <p className="text-[14px] text-cbt-textMuted dark:text-cbt-dark-textMuted text-center mb-10">
+            Gelişimini kaydet, kaldığın yerden devam et
           </p>
 
-          <p className="text-center text-xs pt-2">
-            <Link href="/login" className="text-cbt-accent hover:underline">
-              Zaten hesabım var — Giriş yap
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[13px] font-medium text-cbt-text dark:text-cbt-dark-text mb-1.5">
+                E-posta
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 h-12 rounded-xl border border-cbt-border dark:border-cbt-dark-border bg-cbt-surface dark:bg-cbt-dark-surface text-[15px] text-cbt-text dark:text-cbt-dark-text placeholder:text-cbt-textMuted focus:outline-none focus:border-cbt-borderStrong dark:focus:border-cbt-dark-borderStrong transition-colors"
+                placeholder="ornek@eposta.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-medium text-cbt-text dark:text-cbt-dark-text mb-1.5">
+                Şifre
+              </label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                maxLength={128}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 h-12 rounded-xl border border-cbt-border dark:border-cbt-dark-border bg-cbt-surface dark:bg-cbt-dark-surface text-[15px] text-cbt-text dark:text-cbt-dark-text focus:outline-none focus:border-cbt-borderStrong dark:focus:border-cbt-dark-borderStrong transition-colors"
+              />
+              <p className="mt-1.5 text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
+                En az 8 karakter
+              </p>
+            </div>
+
+            {error && (
+              <p className="text-[13px] text-cbt-danger dark:text-cbt-dark-danger leading-relaxed">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-12 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 transition-opacity disabled:opacity-40"
+            >
+              {submitting ? "Hesap oluşturuluyor…" : "Devam et"}
+            </button>
+
+            <p className="text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted leading-relaxed text-center">
+              Kayıt olarak KVKK aydınlatma metnini kabul etmiş olursun.
+              Hesabını ve verilerini istediğin an silebilirsin.
+            </p>
+          </form>
+
+          <p className="mt-8 text-center text-[13px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
+            Zaten hesabın var mı?{" "}
+            <Link
+              href="/login"
+              className="font-medium text-cbt-text dark:text-cbt-dark-text hover:underline underline-offset-2"
+            >
+              Giriş yap
             </Link>
           </p>
-        </form>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

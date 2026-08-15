@@ -2,191 +2,154 @@
 
 import {
   MessageCircle,
-  LayoutGrid,
   ArrowRight,
-  Sparkles,
   Pencil,
   Lightbulb,
   Wind,
   Lock,
   Heart,
   Compass,
+  BookOpen,
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Landing({ onStart }: { onStart: () => void }) {
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden">
-      <div className="hero-orb hero-orb-1" />
-      <div className="hero-orb hero-orb-2" />
-
+    <div className="relative min-h-screen flex flex-col">
       {/* Header */}
-      <header className="relative z-10 border-b border-cbt-border/40 dark:border-cbt-dark-border/40 bg-cbt-bg/60 dark:bg-cbt-dark-bg/60 backdrop-blur-xl backdrop-saturate-150">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-3.5">
+      <header className="sticky top-0 z-20 border-b border-cbt-border/50 dark:border-cbt-dark-border/50 bg-cbt-bg/80 dark:bg-cbt-dark-bg/80 backdrop-blur-xl">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
+          <span className="text-[17px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
+            Neva
+          </span>
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-cbt-accent text-white dark:bg-cbt-dark-accent dark:text-cbt-dark-bg">
-              <Sparkles size={14} strokeWidth={2.4} />
-            </div>
-            <span className="text-[14px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
-              Neva
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
             <a
               href="/cards"
-              className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-[13px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary hover:text-cbt-text dark:hover:text-cbt-dark-text hover:bg-cbt-surfaceMuted dark:hover:bg-cbt-dark-surfaceMuted transition-colors"
+              className="px-3 h-9 flex items-center rounded-full text-[13px] font-medium text-cbt-textSecondary dark:text-cbt-dark-textSecondary hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
             >
-              <LayoutGrid size={14} strokeWidth={2.2} />
-              Kartlar
+              Konular
             </a>
             <ThemeToggle />
+            <button
+              onClick={onStart}
+              className="px-4 h-9 flex items-center rounded-full bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[13px] font-medium hover:opacity-85 transition-opacity"
+            >
+              Başla
+            </button>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <main className="relative z-10 flex-1 flex flex-col items-center px-6 pt-16 sm:pt-24 pb-10">
-        <div className="max-w-2xl w-full text-center animate-hero-in">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cbt-accentSoft dark:bg-cbt-dark-accentSoft text-cbt-accent dark:text-cbt-dark-accent text-[12px] font-medium mb-8">
-            <Heart size={12} strokeWidth={2.4} fill="currentColor" />
-            Yanında birileri olduğunu hatırlatmak için burada
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-5 leading-tight">
-            Bazı günler{" "}
-            <span className="text-cbt-accent dark:text-cbt-dark-accent">ağır</span>
-            .
+      <main className="flex-1 flex flex-col items-center px-6">
+        <div className="max-w-3xl w-full text-center pt-24 sm:pt-36 pb-20">
+          <h1 className="text-[44px] sm:text-[64px] font-semibold tracking-[-0.02em] text-cbt-text dark:text-cbt-dark-text leading-[1.05] mb-6">
+            Zihnin için
             <br />
-            Bugün onlardan biriyse,
-            <br />
-            <span className="text-cbt-accent dark:text-cbt-dark-accent">
-              konuşabiliriz.
-            </span>
+            sakin bir alan.
           </h1>
 
-          <p className="text-lg text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed max-w-xl mx-auto mb-10">
-            Kaygı, düşük mood, panik, iç eleştirmenle savaşmak — hepsi tanıdık.
-            Bir arkadaş kadar sıcak, bir çerçeve kadar net konuşan bir sohbet
-            arkadaşı. Terapist değilim, ama iyi bir dinleyici olabilirim.
+          <p className="text-[17px] sm:text-[19px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed max-w-xl mx-auto mb-10">
+            Kaygı, düşük ruh hali, uykusuzluk ya da zor bir dönem —
+            ne yaşıyorsan, bilişsel davranışçı terapi temelli yöntemlerle
+            birlikte üzerinden geçelim.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
             <button
               onClick={onStart}
-              className="group inline-flex items-center gap-2 px-6 py-3 rounded-full bg-cbt-accent dark:bg-cbt-dark-accent text-white dark:text-cbt-dark-bg text-[15px] font-medium shadow-glow hover:shadow-elevated transition-all active:scale-[0.97]"
+              className="inline-flex items-center gap-2 px-7 h-12 rounded-full bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 transition-opacity active:scale-[0.98]"
             >
-              <MessageCircle size={16} strokeWidth={2.4} />
-              Sohbete başla
-              <ArrowRight
-                size={15}
-                strokeWidth={2.4}
-                className="transition-transform group-hover:translate-x-0.5"
-              />
+              Konuşmaya başla
             </button>
             <a
               href="/cards"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-[14px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
+              className="inline-flex items-center gap-1.5 px-5 h-12 rounded-full text-[15px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
             >
-              Önce kartları incele
-              <ArrowRight size={13} strokeWidth={2.2} />
+              Konuları incele
+              <ArrowRight size={15} strokeWidth={2} />
             </a>
           </div>
 
-          <p className="text-[11px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
-            Kayıt gerekmiyor · İstediğin an silebilirsin · 2 dakikada başla
+          <p className="text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
+            Üyelik gerektirmez · Verilerini istediğin an silebilirsin
           </p>
         </div>
 
         {/* How it works */}
-        <section className="mt-24 w-full max-w-4xl">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cbt-surfaceMuted dark:bg-cbt-dark-surfaceMuted text-cbt-textSecondary dark:text-cbt-dark-textSecondary text-[11px] font-medium mb-3 tracking-wide uppercase">
-              Nasıl çalışır
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
-              Üç küçük adım, hepsi bu.
-            </h2>
-          </div>
+        <section className="w-full max-w-4xl pb-24">
+          <h2 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text text-center mb-12">
+            Nasıl çalışır
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <Step
-              num="01"
-              icon={<Pencil size={18} strokeWidth={2.2} />}
+              icon={<Pencil size={20} strokeWidth={1.8} />}
               title="Anlat"
-              body="Bugün ne var, ne oldu, ne düşünüyorsun — cümle kurmasan bile olur. Kafanda ne varsa yaz."
+              body="Bugün seni zorlayan ne varsa yaz. Düzgün cümleler kurman gerekmiyor — aklından geçen neyse o."
             />
             <Step
-              num="02"
-              icon={<Lightbulb size={18} strokeWidth={2.2} />}
-              title="Örüntüyü gör"
-              body="CBT çerçevelerinden hangisi durumuna uygun onu birlikte bulalım. Kaygı döngüsü mü, iç eleştirmen mi, kaçınma mı?"
+              icon={<Lightbulb size={20} strokeWidth={1.8} />}
+              title="Fark et"
+              body="Düşünce ve davranış örüntülerini birlikte inceleyelim. Neyin seni sıkıştırdığını görmek, çoğu zaman ilk adımdır."
             />
             <Step
-              num="03"
-              icon={<Wind size={18} strokeWidth={2.2} />}
-              title="Küçük bir adım dene"
-              body="3 dakikalık bir nefes egzersizi, tek cümlelik bir yeniden çerçeveleme, minik bir aktivite planı — bugün için yeterli."
+              icon={<Wind size={20} strokeWidth={1.8} />}
+              title="Küçük bir adım at"
+              body="Kısa bir nefes egzersizi, bir düşünce kaydı ya da küçük bir plan. Bugün için bir adım yeterli."
             />
           </div>
         </section>
 
         {/* Values */}
-        <section className="mt-24 w-full max-w-4xl">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cbt-surfaceMuted dark:bg-cbt-dark-surfaceMuted text-cbt-textSecondary dark:text-cbt-dark-textSecondary text-[11px] font-medium mb-3 tracking-wide uppercase">
-              Bilmen gerekenler
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
-              Sınırların farkında bir arkadaş.
-            </h2>
-          </div>
+        <section className="w-full max-w-4xl pb-24">
+          <h2 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text text-center mb-12">
+            Neye güvenebilirsin
+          </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <Value
-              icon={<Lock size={16} strokeWidth={2.2} />}
-              title="Anonim"
-              body="Kayıt yok. Mesajlarının ham hâli kalıcı saklanmaz, oturum bitince silinir."
+              icon={<Lock size={18} strokeWidth={1.8} />}
+              title="Gizlilik"
+              body="Üyeliksiz kullanabilirsin. Mesajların kalıcı olarak saklanmaz; hesabını ve verilerini istediğin an silebilirsin."
             />
             <Value
-              icon={<Heart size={16} strokeWidth={2.2} />}
-              title="Yargısız"
-              body="Sıcak, sakin, patologize etmeyen bir ton. 'Yanlış hissediyorsun' asla."
+              icon={<BookOpen size={18} strokeWidth={1.8} />}
+              title="Bilimsel temel"
+              body="İçerik; NICE, APA gibi klinik rehberlere ve hakemli araştırmalara dayanan bilişsel davranışçı terapi yöntemlerinden derlenmiştir."
             />
             <Value
-              icon={<Compass size={16} strokeWidth={2.2} />}
-              title="Yönlendirir, ikame etmez"
-              body="Krizde 112'ye, klinik değerlendirmede uzmana yönlendirir. Terapinin yerine geçmez."
+              icon={<Compass size={18} strokeWidth={1.8} />}
+              title="Sınırlarını bilir"
+              body="Neva bir terapist değildir ve terapinin yerini tutmaz. İhtiyaç hâlinde seni bir uzmana ya da acil yardım hattına yönlendirir."
             />
           </div>
         </section>
 
         {/* Final CTA */}
-        <section className="mt-24 mb-8 w-full max-w-2xl text-center">
-          <p className="text-[15px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary mb-5">
-            Hazırsan başlayalım. Aceleye gerek yok.
+        <section className="w-full max-w-2xl text-center pb-24">
+          <h2 className="text-[24px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-3">
+            Hazır olduğunda başla.
+          </h2>
+          <p className="text-[15px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary mb-8">
+            Acele etmene gerek yok.
           </p>
           <button
             onClick={onStart}
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-full bg-cbt-accent dark:bg-cbt-dark-accent text-white dark:text-cbt-dark-bg text-[15px] font-medium shadow-glow hover:shadow-elevated transition-all active:scale-[0.97]"
+            className="inline-flex items-center gap-2 px-7 h-12 rounded-full bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 transition-opacity active:scale-[0.98]"
           >
-            <MessageCircle size={16} strokeWidth={2.4} />
-            Sohbete başla
-            <ArrowRight
-              size={15}
-              strokeWidth={2.4}
-              className="transition-transform group-hover:translate-x-0.5"
-            />
+            Konuşmaya başla
           </button>
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-cbt-border/40 dark:border-cbt-dark-border/40 px-6 py-4">
-        <div className="max-w-5xl mx-auto text-center text-[11px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
-          Kriz durumunda{" "}
-          <span className="font-medium text-cbt-text dark:text-cbt-dark-text">
-            112
-          </span>
-          'yi ara. Bu araç terapist, hekim ya da acil servis yerine geçmez.
+      <footer className="border-t border-cbt-border/50 dark:border-cbt-dark-border/50 px-6 py-6">
+        <div className="max-w-5xl mx-auto text-center text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted leading-relaxed">
+          Neva bir terapist, hekim ya da acil servis değildir.
+          <br />
+          Kendine zarar verme düşüncen varsa ya da acil durumdaysan{" "}
+          <span className="font-semibold text-cbt-text dark:text-cbt-dark-text">112</span>
+          'yi ara.
         </div>
       </footer>
     </div>
@@ -194,30 +157,21 @@ export default function Landing({ onStart }: { onStart: () => void }) {
 }
 
 function Step({
-  num,
   icon,
   title,
   body,
 }: {
-  num: string;
   icon: React.ReactNode;
   title: string;
   body: string;
 }) {
   return (
-    <div className="p-6 rounded-2xl bg-cbt-surface/60 dark:bg-cbt-dark-surface/60 border border-cbt-border/60 dark:border-cbt-dark-border/60 backdrop-blur-sm hover:border-cbt-borderStrong dark:hover:border-cbt-dark-borderStrong transition-colors">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-cbt-accentSoft dark:bg-cbt-dark-accentSoft text-cbt-accent dark:text-cbt-dark-accent">
-          {icon}
-        </div>
-        <div className="text-[11px] font-mono text-cbt-textMuted dark:text-cbt-dark-textMuted tracking-widest">
-          {num}
-        </div>
-      </div>
-      <div className="text-[15px] font-semibold text-cbt-text dark:text-cbt-dark-text mb-1.5">
+    <div className="p-7 rounded-2xl bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border/60 dark:border-cbt-dark-border/60">
+      <div className="text-cbt-text dark:text-cbt-dark-text mb-4">{icon}</div>
+      <div className="text-[16px] font-semibold text-cbt-text dark:text-cbt-dark-text mb-2">
         {title}
       </div>
-      <div className="text-[13px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed">
+      <div className="text-[14px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed">
         {body}
       </div>
     </div>
@@ -234,14 +188,12 @@ function Value({
   body: string;
 }) {
   return (
-    <div className="p-4 rounded-xl bg-cbt-surface/60 dark:bg-cbt-dark-surface/60 border border-cbt-border/60 dark:border-cbt-dark-border/60 backdrop-blur-sm">
-      <div className="flex items-center gap-2 mb-2 text-cbt-accent dark:text-cbt-dark-accent">
-        {icon}
-        <div className="text-[13px] font-medium text-cbt-text dark:text-cbt-dark-text">
-          {title}
-        </div>
+    <div className="p-7 rounded-2xl bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border/60 dark:border-cbt-dark-border/60">
+      <div className="text-cbt-text dark:text-cbt-dark-text mb-4">{icon}</div>
+      <div className="text-[16px] font-semibold text-cbt-text dark:text-cbt-dark-text mb-2">
+        {title}
       </div>
-      <div className="text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted leading-relaxed">
+      <div className="text-[14px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed">
         {body}
       </div>
     </div>

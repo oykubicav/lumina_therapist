@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { postResendVerify } from "@/lib/api";
 
-
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
@@ -17,7 +16,6 @@ export default function LoginPage() {
   const [needsVerify, setNeedsVerify] = useState(false);
   const [resendMessage, setResendMessage] = useState("");
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -25,97 +23,134 @@ export default function LoginPage() {
     try {
       await login(email, password);
       router.push("/");
-} catch (err: any) {
-  // 403 → email verify eksik
-  if (err?.status === 403 || err?.message?.includes("doğrula")) {
-    setError("E-posta adresini henüz doğrulamadın. Kayıt sırasında gelen linke tıkla — spam kutunu da kontrol et.");
-    setNeedsVerify(true);
-  } else {
-    setError(err?.message || "Giriş başarısız oldu.");
-  }
-} finally {
-  setSubmitting(false);
-}}
-    
+    } catch (err: any) {
+      if (err?.status === 403 || err?.message?.includes("doğrula")) {
+        setError(
+          "E-posta adresin henüz doğrulanmamış. Kayıt olurken gönderdiğimiz bağlantıya tıkla — gerekirse spam klasörüne de bak."
+        );
+        setNeedsVerify(true);
+      } else {
+        setError(err?.message || "Giriş yapılamadı. Bilgilerini kontrol edip tekrar dene.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cbt-bg dark:bg-cbt-dark-bg p-4">
-      <div className="w-full max-w-md">
-        <h1 className="text-2xl font-medium text-cbt-text dark:text-cbt-dark-text mb-2 text-center">
-          Giriş yap
-        </h1>
-        <p className="text-sm text-cbt-textMuted text-center mb-8">
-          Hesabına giriş yaparak sohbete devam et
-        </p>
+    <div className="min-h-screen flex flex-col bg-cbt-bg dark:bg-cbt-dark-bg">
+      <header className="px-6 py-5">
+        <Link
+          href="/"
+          className="text-[17px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text"
+        >
+          Neva
+        </Link>
+      </header>
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-cbt-dark-surface rounded-2xl p-6 shadow-soft space-y-4">
-          <div>
-            <label className="block text-xs text-cbt-textMuted mb-1">E-posta</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-cbt-border dark:border-cbt-dark-border bg-transparent text-cbt-text dark:text-cbt-dark-text focus:outline-none focus:border-cbt-accent"
-              placeholder="you@example.com"
-            />
+      <main className="flex-1 flex items-center justify-center px-6 pb-24">
+        <div className="w-full max-w-sm">
+          <h1 className="text-[28px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-2 text-center">
+            Tekrar hoş geldin
+          </h1>
+          <p className="text-[14px] text-cbt-textMuted dark:text-cbt-dark-textMuted text-center mb-10">
+            Hesabınla devam et
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[13px] font-medium text-cbt-text dark:text-cbt-dark-text mb-1.5">
+                E-posta
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 h-12 rounded-xl border border-cbt-border dark:border-cbt-dark-border bg-cbt-surface dark:bg-cbt-dark-surface text-[15px] text-cbt-text dark:text-cbt-dark-text placeholder:text-cbt-textMuted focus:outline-none focus:border-cbt-borderStrong dark:focus:border-cbt-dark-borderStrong transition-colors"
+                placeholder="ornek@eposta.com"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[13px] font-medium text-cbt-text dark:text-cbt-dark-text">
+                  Şifre
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
+                >
+                  Şifreni mi unuttun?
+                </Link>
+              </div>
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 h-12 rounded-xl border border-cbt-border dark:border-cbt-dark-border bg-cbt-surface dark:bg-cbt-dark-surface text-[15px] text-cbt-text dark:text-cbt-dark-text focus:outline-none focus:border-cbt-borderStrong dark:focus:border-cbt-dark-borderStrong transition-colors"
+              />
+            </div>
+
+            {error && (
+              <p className="text-[13px] text-cbt-danger dark:text-cbt-dark-danger leading-relaxed">
+                {error}
+              </p>
+            )}
+
+            {needsVerify && (
+              <button
+                type="button"
+                onClick={async () => {
+                  await postResendVerify(email);
+                  setResendMessage(
+                    "Doğrulama bağlantısı yeniden gönderildi. E-posta kutunu kontrol et."
+                  );
+                  setNeedsVerify(false);
+                }}
+                className="text-[13px] font-medium text-cbt-text dark:text-cbt-dark-text underline underline-offset-2"
+              >
+                Doğrulama bağlantısını yeniden gönder
+              </button>
+            )}
+            {resendMessage && (
+              <p className="text-[13px] text-cbt-success dark:text-cbt-dark-success">
+                {resendMessage}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full h-12 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 transition-opacity disabled:opacity-40"
+            >
+              {submitting ? "Giriş yapılıyor…" : "Giriş yap"}
+            </button>
+          </form>
+
+          <div className="mt-8 text-center space-y-3">
+            <p className="text-[13px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
+              Hesabın yok mu?{" "}
+              <Link
+                href="/register"
+                className="font-medium text-cbt-text dark:text-cbt-dark-text hover:underline underline-offset-2"
+              >
+                Kayıt ol
+              </Link>
+            </p>
+            <p className="text-[13px]">
+              <Link
+                href="/"
+                className="text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
+              >
+                Üyeliksiz devam et
+              </Link>
+            </p>
           </div>
-
-          <div>
-            <label className="block text-xs text-cbt-textMuted mb-1">Şifre</label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-cbt-border dark:border-cbt-dark-border bg-transparent text-cbt-text dark:text-cbt-dark-text focus:outline-none focus:border-cbt-accent"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
-          {needsVerify && (
-  <button
-    type="button"
-    onClick={async () => {
-      await postResendVerify(email);
-      setResendMessage("Doğrulama linki tekrar gönderildi. E-postanı kontrol et.");
-      setNeedsVerify(false);
-    }}
-    className="text-sm text-cbt-accent hover:underline mt-2"
-  >
-    Doğrulama linkini tekrar yolla
-  </button>
-)}
-{resendMessage && (
-  <p className="text-sm text-emerald-600 mt-2">{resendMessage}</p>
-)}
-
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 rounded-xl bg-cbt-accent text-white font-medium disabled:opacity-50"
-          >
-            {submitting ? "Giriş yapılıyor..." : "Giriş yap"}
-          </button>
-
-          <div className="flex justify-between text-xs pt-2">
-            <Link href="/forgot-password" className="text-cbt-textMuted hover:text-cbt-accent">
-              Şifremi unuttum
-            </Link>
-            <Link href="/register" className="text-cbt-accent hover:underline">
-              Hesap oluştur
-            </Link>
-          </div>
-        </form>
-
-        <p className="text-center text-xs text-cbt-textMuted mt-6">
-          <Link href="/" className="hover:text-cbt-accent">Anonim olarak devam et</Link>
-        </p>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

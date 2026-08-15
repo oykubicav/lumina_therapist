@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LogIn, LogOut, User } from "lucide-react";
 
 const WELCOME =
-  "Merhaba. Bugün nasıl geçiyor? İstediğin herhangi bir şeyi anlatabilirsin — kaygı, düşük mood, iç eleştirmen, uykusuzluk ne olursa. Terapist değilim, ama iyi bir dinleyici olmayı deniyorum. Kriz varsa lütfen önce 112'yi ara.";
+  "Merhaba, hoş geldin. Bugün seni buraya getiren ne? Kaygı, moral bozukluğu, uyku sorunları ya da aklındaki başka bir şey — ne olursa anlatabilirsin. Acelemiz yok.";
 
 export default function ChatWindow() {
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -129,7 +129,7 @@ useEffect(() => {
                 <Bug size={16} strokeWidth={2.2} />
               </IconButton>
             )}
-            <IconButton label="Kartlar" href="/cards">
+            <IconButton label="Konular" href="/cards">
               <LayoutGrid size={16} strokeWidth={2.2} />
             </IconButton>
             <Link
@@ -137,7 +137,7 @@ useEffect(() => {
             className="text-sm text-cbt-textSecondary hover:text-cbt-text flex items-center gap-1"
             >
             <LineChart size={14} />
-            İlerlemem
+            Gelişimim
             </Link>
             <ThemeToggle />
             <IconButton label="Oturumu sil" danger onClick={resetSession}>
@@ -267,9 +267,8 @@ useEffect(() => {
           </div>
           <div className="mt-2 flex justify-between items-center text-[11px] text-cbt-textMuted dark:text-cbt-dark-textMuted px-1">
             <span>
-              Kriz durumunda{" "}
+              Neva bir terapist değildir. Acil bir durumdaysan{" "}
               <span className="font-medium text-cbt-text dark:text-cbt-dark-text">112</span>'yi ara.
-              Uzman değerlendirmesi yerine geçmez.
             </span>
             <span
               className={

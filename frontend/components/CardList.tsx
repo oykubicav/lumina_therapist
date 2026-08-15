@@ -1,18 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Search, X } from "lucide-react";
+import { ArrowLeft, Search, X, ChevronRight } from "lucide-react";
 import { getTopics, listCards, getCard } from "@/lib/api";
 import type { CBTCardSummary, CBTCardOut, TopicInfo } from "@/lib/types";
 import ThemeToggle from "./ThemeToggle";
 
 const TYPE_LABELS: Record<string, string> = {
-  psychoeducation: "Bilgi",
-  self_assessment: "Kontrol",
+  psychoeducation: "Bilgilendirme",
+  self_assessment: "Kendini değerlendirme",
   exercise: "Egzersiz",
   technique: "Teknik",
-  in_attack: "Anlık",
+  in_attack: "Anlık destek",
   safety: "Güvenlik",
+};
+
+const TOPIC_DESCRIPTIONS: Record<string, string> = {
+  health_anxiety:
+    "Bedensel belirtilere dair sürekli endişe, hastalık korkusu ve güvence arayışı üzerine.",
+  panic: "Panik atakları anlamak, atak anında ve sonrasında ne yapılabileceği üzerine.",
+  gad: "Sürekli endişe, kontrol edilemeyen düşünceler ve gerginlikle çalışmak üzerine.",
+  depression:
+    "Düşük ruh hali, isteksizlik ve olumsuz düşünce döngüleriyle başa çıkma üzerine.",
+  low_self_esteem:
+    "Kendine dair olumsuz inançlar ve iç eleştirmenle çalışmak üzerine.",
+  insomnia: "Uykuya dalamama, gece uyanmaları ve uyku düzenini onarmak üzerine.",
+  work_stress:
+    "İş yükü, tükenmişlik ve iş-yaşam sınırlarını korumak üzerine.",
+  relationship_stress:
+    "İlişki çatışmaları, iletişim sorunları ve bağ kurma üzerine.",
+  grief_loss: "Kayıp, yas süreci ve kayıpla yaşamayı öğrenmek üzerine.",
+  life_transitions:
+    "Taşınma, ayrılık, mezuniyet gibi büyük yaşam değişimlerine uyum üzerine.",
+  trauma_awareness:
+    "Zor yaşantıların etkilerini tanımak ve destek seçeneklerini bilmek üzerine.",
 };
 
 export default function CardList() {
@@ -33,6 +54,7 @@ export default function CardList() {
   }, []);
 
   useEffect(() => {
+    if (!selectedTopic && !q) return;
     setLoading(true);
     setError(null);
     const t = setTimeout(() => {
@@ -63,120 +85,156 @@ export default function CardList() {
     }
   }
 
+  const selectedTopicInfo = topics.find((t) => t.topic === selectedTopic);
+  const showingList = Boolean(selectedTopic || q);
+
   return (
     <div className="min-h-screen bg-cbt-bg dark:bg-cbt-dark-bg">
-      <header className="sticky top-0 z-30 border-b border-cbt-border/60 dark:border-cbt-dark-border/60 bg-cbt-bg/80 dark:bg-cbt-dark-bg/80 backdrop-blur-xl backdrop-saturate-150">
-        <div className="max-w-4xl mx-auto flex items-center justify-between px-4 py-3">
-          <div>
-            <h1 className="text-[15px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
-              Kart Kütüphanesi
-            </h1>
-            <p className="text-xs text-cbt-textMuted dark:text-cbt-dark-textMuted mt-0.5">
-              CBT temelli bilgi ve egzersiz kartları
-            </p>
+      <header className="sticky top-0 z-30 border-b border-cbt-border/50 dark:border-cbt-dark-border/50 bg-cbt-bg/80 dark:bg-cbt-dark-bg/80 backdrop-blur-xl">
+        <div className="max-w-4xl mx-auto flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            {showingList ? (
+              <button
+                onClick={() => {
+                  setSelectedTopic("");
+                  setQ("");
+                }}
+                className="flex items-center gap-1 text-[13px] text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
+              >
+                <ArrowLeft size={15} strokeWidth={2} />
+                Konular
+              </button>
+            ) : (
+              <a
+                href="/"
+                className="flex items-center gap-1 text-[13px] text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
+              >
+                <ArrowLeft size={15} strokeWidth={2} />
+                Ana sayfa
+              </a>
+            )}
           </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <a
-              href="/"
-              className="flex items-center gap-1 text-xs text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
-            >
-              <ArrowLeft size={14} strokeWidth={2.2} />
-              Ana sayfa
-            </a>
-          </div>
+          <span className="text-[15px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
+            {showingList && selectedTopicInfo
+              ? selectedTopicInfo.display_name_tr
+              : "Konular"}
+          </span>
+          <ThemeToggle />
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
-        <div className="flex flex-wrap gap-1.5">
-          <TopicPill
-            active={selectedTopic === ""}
-            onClick={() => setSelectedTopic("")}
-          >
-            Tümü
-          </TopicPill>
-          {topics.map((t) => (
-            <TopicPill
-              key={t.topic}
-              active={selectedTopic === t.topic}
-              onClick={() => setSelectedTopic(t.topic)}
-              count={t.count}
-            >
-              {t.display_name_tr}
-            </TopicPill>
-          ))}
-        </div>
-
-        <div className="relative">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Search */}
+        <div className="relative mb-8">
           <Search
-            size={15}
-            strokeWidth={2.2}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-cbt-textMuted dark:text-cbt-dark-textMuted"
+            size={16}
+            strokeWidth={2}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-cbt-textMuted dark:text-cbt-dark-textMuted"
           />
           <input
-            className="w-full pl-9 pr-9 py-2.5 bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border dark:border-cbt-dark-border rounded-xl text-[14px] text-cbt-text dark:text-cbt-dark-text placeholder:text-cbt-textMuted dark:placeholder:text-cbt-dark-textMuted focus:outline-none focus:border-cbt-borderStrong dark:focus:border-cbt-dark-borderStrong transition-colors"
-            placeholder="Başlıkta ara…"
+            className="w-full pl-11 pr-10 h-12 bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border dark:border-cbt-dark-border rounded-2xl text-[15px] text-cbt-text dark:text-cbt-dark-text placeholder:text-cbt-textMuted dark:placeholder:text-cbt-dark-textMuted focus:outline-none focus:border-cbt-borderStrong dark:focus:border-cbt-dark-borderStrong transition-colors"
+            placeholder="Ara — örn. uyku, panik, iç eleştirmen"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
           {q && (
             <button
               onClick={() => setQ("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text"
               aria-label="Temizle"
             >
-              <X size={14} strokeWidth={2.4} />
+              <X size={15} strokeWidth={2.2} />
             </button>
           )}
         </div>
 
-        <div className="text-xs text-cbt-textMuted dark:text-cbt-dark-textMuted">
-          {loading ? "Yükleniyor…" : `${total} kart`}
-        </div>
-
         {error && (
-          <div className="text-xs text-cbt-danger dark:text-cbt-dark-danger bg-cbt-dangerSoft dark:bg-cbt-dark-dangerSoft border border-cbt-danger/20 dark:border-cbt-dark-danger/30 rounded-lg px-4 py-3">
+          <div className="text-[13px] text-cbt-danger dark:text-cbt-dark-danger bg-cbt-dangerSoft dark:bg-cbt-dark-dangerSoft border border-cbt-danger/20 dark:border-cbt-dark-danger/30 rounded-xl px-4 py-3 mb-6">
             {error}
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {loading && cards.length === 0
-            ? Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-24 rounded-xl bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border/40 dark:border-cbt-dark-border/40 shimmer"
-                />
-              ))
-            : cards.map((c, i) => (
-                <button
-                  key={c.id}
-                  onClick={() => openDetail(c.id)}
-                  className="text-left p-4 rounded-xl bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border/60 dark:border-cbt-dark-border/60 hover:border-cbt-borderStrong dark:hover:border-cbt-dark-borderStrong hover:shadow-soft transition-all active:scale-[0.99] group animate-slide-up"
-                  style={{
-                    animationDelay: `${Math.min(i * 40, 400)}ms`,
-                    animationFillMode: "backwards",
-                  }}
-                >
-                  <div className="text-[14px] font-medium leading-snug text-cbt-text dark:text-cbt-dark-text group-hover:text-cbt-accent dark:group-hover:text-cbt-dark-accent transition-colors">
-                    {c.title_tr}
-                  </div>
-                  <div className="mt-2 flex items-center gap-1.5 text-[11px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
-                    <span className="uppercase tracking-wide">
-                      {c.topic.replace("_", " ")}
-                    </span>
-                    <span className="w-0.5 h-0.5 rounded-full bg-cbt-textMuted dark:bg-cbt-dark-textMuted" />
-                    <span>{TYPE_LABELS[c.type] || c.type}</span>
-                  </div>
-                </button>
-              ))}
-        </div>
-
-        {cards.length === 0 && !loading && (
-          <div className="text-sm text-cbt-textMuted dark:text-cbt-dark-textMuted text-center py-12">
-            Kart bulunamadı.
+        {/* Topic overview */}
+        {!showingList && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {topics.map((t, i) => (
+              <button
+                key={t.topic}
+                onClick={() => setSelectedTopic(t.topic)}
+                className="text-left p-6 rounded-2xl bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border/60 dark:border-cbt-dark-border/60 hover:border-cbt-borderStrong dark:hover:border-cbt-dark-borderStrong transition-all active:scale-[0.99] group animate-slide-up"
+                style={{
+                  animationDelay: `${Math.min(i * 40, 400)}ms`,
+                  animationFillMode: "backwards",
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[16px] font-semibold text-cbt-text dark:text-cbt-dark-text">
+                    {t.display_name_tr}
+                  </span>
+                  <ChevronRight
+                    size={16}
+                    strokeWidth={2}
+                    className="text-cbt-textMuted dark:text-cbt-dark-textMuted group-hover:translate-x-0.5 transition-transform"
+                  />
+                </div>
+                <p className="text-[13px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed">
+                  {TOPIC_DESCRIPTIONS[t.topic] || ""}
+                </p>
+              </button>
+            ))}
           </div>
+        )}
+
+        {/* Content list within a topic / search results */}
+        {showingList && (
+          <>
+            {selectedTopicInfo && !q && (
+              <p className="text-[14px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed mb-6 max-w-2xl">
+                {TOPIC_DESCRIPTIONS[selectedTopic] || ""}
+              </p>
+            )}
+
+            <div className="space-y-2.5">
+              {loading && cards.length === 0
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-16 rounded-2xl bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border/40 dark:border-cbt-dark-border/40 shimmer"
+                    />
+                  ))
+                : cards.map((c, i) => (
+                    <button
+                      key={c.id}
+                      onClick={() => openDetail(c.id)}
+                      className="w-full text-left px-5 py-4 rounded-2xl bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border/60 dark:border-cbt-dark-border/60 hover:border-cbt-borderStrong dark:hover:border-cbt-dark-borderStrong transition-all active:scale-[0.995] group animate-slide-up flex items-center justify-between gap-4"
+                      style={{
+                        animationDelay: `${Math.min(i * 30, 300)}ms`,
+                        animationFillMode: "backwards",
+                      }}
+                    >
+                      <div>
+                        <div className="text-[15px] font-medium leading-snug text-cbt-text dark:text-cbt-dark-text">
+                          {c.title_tr}
+                        </div>
+                        <div className="mt-1 text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
+                          {TYPE_LABELS[c.type] || c.type}
+                        </div>
+                      </div>
+                      <ChevronRight
+                        size={16}
+                        strokeWidth={2}
+                        className="shrink-0 text-cbt-textMuted dark:text-cbt-dark-textMuted group-hover:translate-x-0.5 transition-transform"
+                      />
+                    </button>
+                  ))}
+            </div>
+
+            {cards.length === 0 && !loading && (
+              <div className="text-[14px] text-cbt-textMuted dark:text-cbt-dark-textMuted text-center py-16">
+                Sonuç bulunamadı.
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -186,46 +244,32 @@ export default function CardList() {
           onClick={() => setOpenCard(null)}
         >
           <div
-            className="max-w-2xl w-full bg-cbt-surface dark:bg-cbt-dark-surface rounded-2xl shadow-modal max-h-[85vh] overflow-hidden flex flex-col animate-modal-in border border-cbt-border/40 dark:border-cbt-dark-border/40"
+            className="max-w-2xl w-full bg-cbt-surface dark:bg-cbt-dark-surface rounded-3xl shadow-modal max-h-[85vh] overflow-hidden flex flex-col animate-modal-in border border-cbt-border/40 dark:border-cbt-dark-border/40"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="border-b border-cbt-border/60 dark:border-cbt-dark-border/60 px-6 py-4 flex items-start justify-between gap-3">
+            <div className="border-b border-cbt-border/50 dark:border-cbt-dark-border/50 px-7 py-5 flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-base font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
+                <h2 className="text-[17px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
                   {openCard.title_tr}
                 </h2>
-                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
-                  <span className="uppercase tracking-wide">
-                    {openCard.topic.replace("_", " ")}
-                  </span>
-                  <span className="w-0.5 h-0.5 rounded-full bg-cbt-textMuted dark:bg-cbt-dark-textMuted" />
-                  <span>{TYPE_LABELS[openCard.type] || openCard.type}</span>
-                  <span className="w-0.5 h-0.5 rounded-full bg-cbt-textMuted dark:bg-cbt-dark-textMuted" />
-                  <code className="font-mono">{openCard.id}</code>
+                <div className="mt-1 text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted">
+                  {TYPE_LABELS[openCard.type] || openCard.type}
                 </div>
               </div>
               <button
-                className="flex items-center justify-center w-8 h-8 rounded-lg text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text hover:bg-cbt-surfaceMuted dark:hover:bg-cbt-dark-surfaceMuted transition-colors"
+                className="flex items-center justify-center w-9 h-9 rounded-full text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text hover:bg-cbt-surfaceMuted dark:hover:bg-cbt-dark-surfaceMuted transition-colors"
                 onClick={() => setOpenCard(null)}
                 aria-label="Kapat"
               >
-                <X size={16} strokeWidth={2.2} />
+                <X size={16} strokeWidth={2} />
               </button>
             </div>
-            <div className="p-6 overflow-y-auto chat-scroll text-[14px] leading-relaxed text-cbt-text dark:text-cbt-dark-text whitespace-pre-wrap">
+            <div className="px-7 py-6 overflow-y-auto chat-scroll text-[15px] leading-relaxed text-cbt-text dark:text-cbt-dark-text whitespace-pre-wrap">
               {openCard.content_tr}
               {openCard.safety_notes && (
-                <div className="mt-5 text-xs text-cbt-warning dark:text-cbt-dark-warning bg-cbt-warningSoft dark:bg-cbt-dark-warningSoft border border-cbt-warning/20 dark:border-cbt-dark-warning/30 rounded-lg px-3 py-2.5">
-                  <div className="font-medium mb-1">Güvenlik notu</div>
+                <div className="mt-6 text-[13px] text-cbt-warning dark:text-cbt-dark-warning bg-cbt-warningSoft dark:bg-cbt-dark-warningSoft border border-cbt-warning/20 dark:border-cbt-dark-warning/30 rounded-xl px-4 py-3">
+                  <div className="font-semibold mb-1">Önemli</div>
                   {openCard.safety_notes}
-                </div>
-              )}
-              {openCard.source_refs.length > 0 && (
-                <div className="mt-5 text-xs text-cbt-textMuted dark:text-cbt-dark-textMuted border-t border-cbt-border/60 dark:border-cbt-dark-border/60 pt-4">
-                  Kaynaklar:{" "}
-                  <code className="font-mono">
-                    {openCard.source_refs.join(", ")}
-                  </code>
                 </div>
               )}
             </div>
@@ -234,46 +278,10 @@ export default function CardList() {
       )}
 
       {openLoading && (
-        <div className="fixed bottom-4 right-4 text-xs text-cbt-textMuted dark:text-cbt-dark-textMuted italic bg-cbt-surface dark:bg-cbt-dark-surface shadow-soft border border-cbt-border dark:border-cbt-dark-border rounded-lg px-3 py-2">
+        <div className="fixed bottom-5 right-5 text-[13px] text-cbt-textMuted dark:text-cbt-dark-textMuted bg-cbt-surface dark:bg-cbt-dark-surface shadow-soft border border-cbt-border dark:border-cbt-dark-border rounded-xl px-4 py-2.5">
           Yükleniyor…
         </div>
       )}
     </div>
-  );
-}
-
-function TopicPill({
-  children,
-  active,
-  onClick,
-  count,
-}: {
-  children: React.ReactNode;
-  active: boolean;
-  onClick: () => void;
-  count?: number;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={
-        active
-          ? "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium bg-cbt-text dark:bg-cbt-dark-text text-cbt-surface dark:text-cbt-dark-bg transition-all"
-          : "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium bg-cbt-surface dark:bg-cbt-dark-surface border border-cbt-border dark:border-cbt-dark-border text-cbt-textSecondary dark:text-cbt-dark-textSecondary hover:border-cbt-borderStrong dark:hover:border-cbt-dark-borderStrong hover:text-cbt-text dark:hover:text-cbt-dark-text transition-all"
-      }
-    >
-      <span>{children}</span>
-      {count != null && (
-        <span
-          className={
-            active
-              ? "text-[11px] opacity-60"
-              : "text-[11px] text-cbt-textMuted dark:text-cbt-dark-textMuted"
-          }
-        >
-          {count}
-        </span>
-      )}
-    </button>
   );
 }

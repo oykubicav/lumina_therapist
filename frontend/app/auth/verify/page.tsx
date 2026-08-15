@@ -2,89 +2,124 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { postVerify } from "@/lib/api";
+import { postVerify, postResendVerify } from "@/lib/api";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
-import { postResendVerify } from "@/lib/api";
 
-// Next.js 14 requires useSearchParams to be inside a Suspense boundary
-// during static generation. Wrap the actual logic in a child component.
 export default function VerifyPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-cbt-bg dark:bg-cbt-dark-bg p-4">
-        <Loader2 className="animate-spin text-cbt-accent" size={32} />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-cbt-bg dark:bg-cbt-dark-bg p-6">
+          <Loader2 className="animate-spin text-cbt-textMuted" size={28} strokeWidth={1.8} />
+        </div>
+      }
+    >
       <VerifyContent />
     </Suspense>
   );
 }
 
 function VerifyContent() {
-    const searchParams = useSearchParams();
-    const token = searchParams.get("token");
-    const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-    const [error, setError] = useState("");
-    useEffect(() => {
-        if (!token) {
-            setStatus("error");
-            setError("Doğrulama tokeni eksik.");
-            return;
-        }
-        postVerify(token)
-            .then(() => {
-                setStatus("success");
-            }
-        )
-        .catch((err) => {
-            setStatus("error");
-            setError(err?.message || "Doğrulama başarısız oldu.");
-        });
-    },[token]);
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [error, setError] = useState("");
 
-return (
-    <div className="min-h-screen flex items-center justify-center bg-cbt-bg dark:bg-cbt-dark-bg p-4">
-      <div className="max-w-md text-center">
-        {status === "loading" && (
-          <>
-            <Loader2 className="animate-spin mx-auto mb-4 text-cbt-accent" size={32} />
-            <p className="text-cbt-textSecondary">Doğrulanıyor...</p>
-          </>
-        )}
+  useEffect(() => {
+    if (!token) {
+      setStatus("error");
+      setError("Doğrulama bağlantısı eksik ya da hatalı.");
+      return;
+    }
+    postVerify(token)
+      .then(() => setStatus("success"))
+      .catch((err) => {
+        setStatus("error");
+        setError(err?.message || "Doğrulama tamamlanamadı.");
+      });
+  }, [token]);
 
-        {status === "success" && (
-          <>
-            <CheckCircle className="mx-auto mb-4 text-emerald-500" size={48} />
-            <h2 className="text-xl font-medium text-cbt-text dark:text-cbt-dark-text mb-3">
-              E-postan doğrulandı
-            </h2>
-            <p className="text-sm text-cbt-textSecondary mb-6">
-              Artık giriş yapabilirsin.
-            </p>
-            <Link href="/login" className="inline-block px-6 py-3 rounded-xl bg-cbt-accent text-white font-medium">
-              Giriş yap
-            </Link>
-          </>
-        )}
+  return (
+    <div className="min-h-screen flex flex-col bg-cbt-bg dark:bg-cbt-dark-bg">
+      <header className="px-6 py-5">
+        <Link
+          href="/"
+          className="text-[17px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text"
+        >
+          Neva
+        </Link>
+      </header>
 
-        {status === "error" && (
-  <>
-    <XCircle className="mx-auto mb-4 text-red-500" size={48} />
-    <h2 className="text-xl font-medium mb-3">Doğrulama başarısız</h2>
-    <p className="text-sm text-red-600 mb-4">{error || "Link geçersiz ya da süresi dolmuş."}</p>
+      <main className="flex-1 flex items-center justify-center px-6 pb-24">
+        <div className="max-w-sm text-center">
+          {status === "loading" && (
+            <>
+              <Loader2
+                className="animate-spin mx-auto mb-6 text-cbt-textMuted"
+                size={28}
+                strokeWidth={1.8}
+              />
+              <p className="text-[14px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary">
+                E-postan doğrulanıyor…
+              </p>
+            </>
+          )}
 
-    <ResendVerifyBlock />
+          {status === "success" && (
+            <>
+              <CheckCircle
+                size={44}
+                strokeWidth={1.5}
+                className="mx-auto mb-6 text-cbt-success dark:text-cbt-dark-success"
+              />
+              <h2 className="text-[24px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-3">
+                E-postan doğrulandı
+              </h2>
+              <p className="text-[14px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary mb-8">
+                Her şey hazır. Artık giriş yapabilirsin.
+              </p>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center px-7 h-12 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 transition-opacity"
+              >
+                Giriş yap
+              </Link>
+            </>
+          )}
 
-    <p className="text-xs text-cbt-textMuted mt-6">
-      Hala sorun yaşıyorsan <Link href="/register" className="text-cbt-accent hover:underline">yeniden kayıt olabilirsin</Link>.
-    </p>
-  </>
-)}
-      </div>
+          {status === "error" && (
+            <>
+              <XCircle
+                size={44}
+                strokeWidth={1.5}
+                className="mx-auto mb-6 text-cbt-danger dark:text-cbt-dark-danger"
+              />
+              <h2 className="text-[24px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-3">
+                Bağlantı geçersiz
+              </h2>
+              <p className="text-[14px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed mb-6">
+                {error || "Bu bağlantının süresi dolmuş ya da daha önce kullanılmış olabilir."}
+              </p>
+
+              <ResendVerifyBlock />
+
+              <p className="text-[13px] text-cbt-textMuted dark:text-cbt-dark-textMuted mt-8">
+                Sorun devam ederse{" "}
+                <Link
+                  href="/register"
+                  className="font-medium text-cbt-text dark:text-cbt-dark-text hover:underline underline-offset-2"
+                >
+                  yeniden kayıt olabilirsin
+                </Link>
+                .
+              </p>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
-
 
 function ResendVerifyBlock() {
   const [email, setEmail] = useState("");
@@ -104,31 +139,31 @@ function ResendVerifyBlock() {
 
   if (sent) {
     return (
-      <p className="text-sm text-emerald-600 mt-4">
-        ✓ Yeni doğrulama linki gönderildi. E-postanı kontrol et.
+      <p className="text-[14px] text-cbt-success dark:text-cbt-dark-success">
+        Yeni doğrulama bağlantısı gönderildi. E-posta kutunu kontrol et.
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleResend} className="mt-4 space-y-2">
-      <p className="text-sm text-cbt-textSecondary mb-2">
-        E-postanı gir, yeni bir doğrulama linki yollayalım:
+    <form onSubmit={handleResend} className="space-y-3 text-left">
+      <p className="text-[13px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary text-center">
+        E-posta adresini yaz, yeni bir bağlantı gönderelim:
       </p>
       <input
         type="email"
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-        className="w-full px-3 py-2 rounded-lg border border-cbt-border bg-transparent focus:outline-none focus:border-cbt-accent"
+        placeholder="ornek@eposta.com"
+        className="w-full px-4 h-12 rounded-xl border border-cbt-border dark:border-cbt-dark-border bg-cbt-surface dark:bg-cbt-dark-surface text-[15px] text-cbt-text dark:text-cbt-dark-text placeholder:text-cbt-textMuted focus:outline-none focus:border-cbt-borderStrong dark:focus:border-cbt-dark-borderStrong transition-colors"
       />
       <button
         type="submit"
         disabled={sending || !email}
-        className="w-full py-2 rounded-lg bg-cbt-accent text-white text-sm font-medium disabled:opacity-50"
+        className="w-full h-12 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 transition-opacity disabled:opacity-40"
       >
-        {sending ? "Gönderiliyor..." : "Yeni link yolla"}
+        {sending ? "Gönderiliyor…" : "Yeni bağlantı gönder"}
       </button>
     </form>
   );
