@@ -2,11 +2,11 @@
 
 Usage in an endpoint:
     from api.auth.dependencies import get_current_user
-    
+
     @router.get("/me")
     async def me(user: User = Depends(get_current_user)):
         return {"email": user.email}
-    
+
     # optional-auth pattern:
     @router.post("/chat")
     async def chat(user: Optional[User] = Depends(get_current_user_optional)):
@@ -14,15 +14,14 @@ Usage in an endpoint:
         ...
 """
 from typing import Optional
-import uuid
 
 from fastapi import Depends, HTTPException, Header, status
 from sqlalchemy.orm import Session
 
 from api.auth.jwt_utils import decode_token
+from api.db import get_db
 from api.db.models import User
-from api.deps import session_store_dep
-from api.session import InMemorySessionStore
+
 
 def _extract_token(authorization: Optional[str]) -> Optional[str]:
     """Authorization header'dan 'Bearer XXX' pattern'inden token çek."""
@@ -33,34 +32,41 @@ def _extract_token(authorization: Optional[str]) -> Optional[str]:
         return None
     return parts[1]
 
+
 async def get_current_user_optional(
     authorization: Optional[str] = Header(None),
-    store: InMemorySessionStore = Depends(session_store_dep),
+    db: Session = Depends(get_db),
 ) -> Optional[User]:
-token = _extract_token(authorization)
-if not token:
-    return None
-user_id = decode_token(token)
-if not user_id:
-    return None
-factory = store._SessionLocal()
-with factory as db:
+    """Return the authenticated user, or None if no/invalid token.
+
+    Never raises — anonymous requests just get None. Use this on endpoints
+    that support both anon and authed users (e.g. /chat).
+    """
+    token = _extract_token(authorization)
+    if not token:
+        return None
+    user_id = decode_token(token)
+    if not user_id:
+        return None
     user = db.get(User, user_id)
-    if user and user.deleted_at is None:
-        return user
-    return None
+    if user is None or user.deleted_at is not None:
+        return None
+    return user
+
 
 async def get_current_user(
-    authorization: Optional[str]= header(None),
-    store: InMemorySessionStore = Depends(session_store_dep),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
 ) -> User:
-    user = await get_current_user_optional(authorization, store)
-    if not user:
+    """Return the authenticated user or raise 401.
+
+    Use on endpoints that require auth (e.g. /me, /progress).
+    """
+    user = await get_current_user_optional(authorization, db)
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Auth required",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
-
-

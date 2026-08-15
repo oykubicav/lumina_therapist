@@ -11,7 +11,7 @@ import uuid
 from jose import jwt, JWTError
 
 _JWT_SECRET = os.environ.get("CBT_JWT_SECRET")
-_JWT_ALGORITHM = os.environ.get("CBT_JWT_ALGORITHM")
+_JWT_ALGORITHM = os.environ.get("CBT_JWT_ALGORITHM", "HS256")
 _JWT_EXPIRE_HOURS = int(os.environ.get("CBT_JWT_EXPIRE_HOURS", "168"))
 
 if not _JWT_SECRET or len(_JWT_SECRET) < 32:

@@ -99,7 +99,7 @@ async def register(
 
         # DB kapandı — email
         sent = send_verification_email(req.email, verify_token)
-        return RegisterResponse(view,sent)
+        return RegisterResponse(user=view, email_sent=sent)
 
     except HTTPException:
         raise
@@ -125,10 +125,11 @@ async def verify_email(
         
         # TODO 3: email_verified=True + verification_token=None (tek kullanımlık)
         try:
-            with db.begin():
-                user.email_verified = True
-                user.verification_token = None
+            user.email_verified = True
+            user.verification_token = None
+            db.commit()
         except Exception:
+            db.rollback()
             log.exception("email verification failed")
             raise HTTPException(status_code=500, detail="Doğrulama işlemi sırasında bir hata oluştu")
             
@@ -218,11 +219,12 @@ async def forgot_password(
             reset_token = secrets.token_urlsafe(32)
             reset_token_expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
             try:
-                with db.begin():
-                    user.reset_token = reset_token
-                    user.reset_token_expires_at = reset_token_expires_at
+                user.reset_token = reset_token
+                user.reset_token_expires_at = reset_token_expires_at
+                db.commit()
                 email_payload = (req.email, reset_token)
             except Exception:
+                db.rollback()
                 log.exception("forgot-password db update failed")
 
     if email_payload:
@@ -243,15 +245,22 @@ async def reset_password(
         user = db.query(User).filter_by(reset_token=req.token).one_or_none()
         if not user or user.deleted_at is not None:
             raise HTTPException(status_code=404, detail="invalid token")
-        if not user.reset_token_expires_at or datetime.now(timezone.utc) > user.reset_token_expires_at:
+        # SQLite tz-naive datetime döner; Postgres tz-aware. Karşılaştırma için normalize.
+        expires_at = user.reset_token_expires_at
+        if not expires_at:
+            raise HTTPException(status_code=400, detail="token expired")
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > expires_at:
             raise HTTPException(status_code=400, detail="token expired")
 
         try:
-            with db.begin():
-                user.password_hash = hash_password(req.new_password)
-                user.reset_token = None
-                user.reset_token_expires_at = None
+            user.password_hash = hash_password(req.new_password)
+            user.reset_token = None
+            user.reset_token_expires_at = None
+            db.commit()
         except Exception:
+            db.rollback()
             log.exception("reset-password db update failed")
             raise HTTPException(status_code=500, detail="Şifre sıfırlama sırasında bir hata oluştu")
 
