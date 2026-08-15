@@ -22,8 +22,8 @@ services:
     plan: free               # Ücretsiz — 15 dk inaktif kalırsa uyur, ilk istekte ~50 sn cold start
     branch: main
     healthCheckPath: /health
-    # Migration her deploy'da alembic tarafından uygulanır (idempotent).
-    preDeployCommand: alembic upgrade head
+    # NOT: Free tier preDeployCommand desteklemiyor. Migration
+    # Dockerfile CMD içinde container startup'ında çalışıyor.
     envVars:
       # ─── LLM ──────────────────────────────────────
       - key: ANTHROPIC_API_KEY

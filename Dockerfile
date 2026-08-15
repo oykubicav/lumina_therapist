@@ -48,9 +48,12 @@ COPY policies/ ./policies/
 COPY registry/ ./registry/
 COPY evals/response_test_set.jsonl evals/retrieval_test_set.jsonl ./evals/
 
-# Alembic — Render's preDeployCommand runs `alembic upgrade head`
+# Alembic — migration container startup'ında çalıştırılır (CMD içinde)
 COPY alembic.ini ./
 COPY alembic/ ./alembic/
+
+# Graph — Neo4j GraphRAG (opsiyonel, env yoksa hybrid retriever fallback yapar)
+COPY graph/ ./graph/
 
 # Runtime configuration
 ENV PYTHONUNBUFFERED=1
@@ -69,4 +72,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s \
     CMD curl -fsS http://localhost:8000/health || exit 1
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+# Startup: önce migration (idempotent), sonra API. Free tier'da
+# preDeployCommand yok, o yüzden migration'ı container start'ında yapıyoruz.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 2"]
