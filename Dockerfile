@@ -46,7 +46,8 @@ COPY cards/ ./cards/
 COPY rules/ ./rules/
 COPY policies/ ./policies/
 COPY registry/ ./registry/
-COPY evals/response_test_set.jsonl evals/retrieval_test_set.jsonl ./evals/
+# NOT: evals/ dosyaları prod runtime'da gerekli değil — lokal test için.
+# `.dockerignore` `evals/*.jsonl`'i hariç bırakıyor, uyumlu.
 
 # Alembic — migration container startup'ında çalıştırılır (CMD içinde)
 COPY alembic.ini ./
