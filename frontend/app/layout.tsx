@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CBT Destek",
+  title: "Neva",
   description:
-    "Türkçe bilişsel davranışçı terapi (CBT) tabanlı self-help asistanı. Terapist ya da acil servis yerine geçmez.",
+    "Türkçe bilişsel davranışçı terapi tabanlı destek asistanı. Terapist ya da acil servis yerine geçmez.",
 };
 
 // Inline script — applies theme class BEFORE first paint to avoid FOUC (flash).

@@ -24,10 +24,6 @@ export default function Page() {
 
   useEffect(() => {
     setMounted(true);
-    // Returning visitor with prior consent → skip landing
-    if (hasConsent()) {
-      setState("chat");
-    }
   }, []);
 
   useEffect(() => {

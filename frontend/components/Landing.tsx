@@ -28,7 +28,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
               <Sparkles size={14} strokeWidth={2.4} />
             </div>
             <span className="text-[14px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
-              CBT Destek
+              Neva
             </span>
           </div>
           <div className="flex items-center gap-1">

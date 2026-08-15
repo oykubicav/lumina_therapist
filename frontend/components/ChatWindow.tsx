@@ -113,20 +113,22 @@ useEffect(() => {
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 px-4 py-3">
           <div>
             <h1 className="text-[15px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
-              CBT Destek
+              Neva
             </h1>
             <p className="text-xs text-cbt-textMuted dark:text-cbt-dark-textMuted mt-0.5">
-              Bilişsel davranışçı terapi tabanlı self-help asistanı
+              Bilişsel davranışçı terapi tabanlı destek
             </p>
           </div>
           <div className="flex items-center gap-1">
-            <IconButton
-              label="Debug"
-              active={showDebug}
-              onClick={() => setShowDebug((v) => !v)}
-            >
-              <Bug size={16} strokeWidth={2.2} />
-            </IconButton>
+            {process.env.NODE_ENV !== "production" && (
+              <IconButton
+                label="Debug"
+                active={showDebug}
+                onClick={() => setShowDebug((v) => !v)}
+              >
+                <Bug size={16} strokeWidth={2.2} />
+              </IconButton>
+            )}
             <IconButton label="Kartlar" href="/cards">
               <LayoutGrid size={16} strokeWidth={2.2} />
             </IconButton>
