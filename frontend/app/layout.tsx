@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-// @ts-expect-error -- Next.js supports global CSS side-effect imports in app/layout.tsx
 import "./globals.css";
 
 const inter = Inter({

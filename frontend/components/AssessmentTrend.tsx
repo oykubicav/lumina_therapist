@@ -139,7 +139,7 @@ export default function AssessmentTrend({ sessionId, kind }: Props) {
                 border: "1px solid #e5e7eb",
                 fontSize: "12px",
               }}
-              formatter={(value: number, _name, props: any) => [
+              formatter={(value: number, _name: string, props: any) => [
                 `${value}/${maxScore} · ${props.payload.severity}`,
                 "Skor",
               ]}
