@@ -28,9 +28,20 @@ from sqlalchemy.orm import Session, sessionmaker
 # ============================================================
 
 def _default_db_url() -> str:
-    """Compose default DB URL from parts, or full override via CBT_DB_URL."""
+    """Compose default DB URL from parts, or full override via CBT_DB_URL.
+
+    Render/Heroku Postgres connectionString uses `postgresql://` scheme,
+    which SQLAlchemy defaults to psycopg2. Biz psycopg (v3) kullanıyoruz —
+    URL'i normalize et.
+    """
     url = os.environ.get("CBT_DB_URL")
     if url:
+        # Auto-upgrade to psycopg v3 driver
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        elif url.startswith("postgres://"):
+            # Heroku/Render legacy scheme
+            url = url.replace("postgres://", "postgresql+psycopg://", 1)
         return url
     # Postgres default — matches docker-compose service
     user = os.environ.get("CBT_DB_USER", "cbt")
