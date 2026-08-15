@@ -1,26 +1,19 @@
 # CBT chatbot API — production Docker image.
 #
-# Multi-stage: builder installs deps + downloads embedding model at build
-# time (image is heavier but first request is instant). Runtime image
-# copies only what's needed.
+# Multi-stage: builder installs deps, runtime image copies only what's needed.
+# Retrieval prod'da TF-IDF (sklearn) ile çalışır — torch/HF modeli imajda yok.
 
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
-# System build deps (needed by torch/sklearn wheels on some archs)
+# System build deps (sklearn/scipy wheels bazı mimarilerde derleme ister)
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements-api.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements-api.txt
-
-# Pre-download the multilingual sentence-transformers model into the image
-# so the container never needs to reach HF at runtime.
-ENV PYTHONPATH=/install/lib/python3.11/site-packages
-RUN python -c "from sentence_transformers import SentenceTransformer; \
-    SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"
 
 
 # ============================================================
@@ -35,9 +28,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy installed deps + model cache from builder
+# Copy installed deps from builder
 COPY --from=builder /install /usr/local
-COPY --from=builder /root/.cache/huggingface /root/.cache/huggingface
 
 # App source
 COPY pipeline/ ./pipeline/

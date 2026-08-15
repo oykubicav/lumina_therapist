@@ -39,7 +39,7 @@ def _build_card_index():
     """
     cards = _cards.all_cbt_cards()
     texts = [c["_text"] for c in cards]
-    backend = embedding_backend.get_backend(prefer_st=True)
+    backend = embedding_backend.get_backend()
     backend.fit(texts)
     matrix = backend.encode(texts)
     return backend, matrix, cards

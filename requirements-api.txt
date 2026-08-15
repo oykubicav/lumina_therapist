@@ -7,7 +7,9 @@ pydantic>=2.9
 anthropic>=0.39
 
 # Retrieval + embeddings
-sentence-transformers>=3.2
+# NOT: sentence-transformers (torch) prod imajında yok — CBT_PREFER_ST=0 ile
+# TF-IDF backend kullanılıyor. Torch ~2GB imaj + ~600MB RAM demek, 512MB
+# instance'ta OOM'a yol açıyor. Lokalde denemek için: pip install sentence-transformers
 scikit-learn>=1.5
 numpy>=1.26
 scipy>=1.13

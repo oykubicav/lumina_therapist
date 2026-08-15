@@ -66,7 +66,7 @@ def _build_anchor_index():
         for a in anchors:
             rows.append(a)
             concept_for_row.append(cid)
-    backend = embedding_backend.get_backend(prefer_st=True)
+    backend = embedding_backend.get_backend()
     backend.fit(rows)  # for TF-IDF; no-op for ST
     matrix = backend.encode(rows)
     return backend, matrix, concept_for_row
