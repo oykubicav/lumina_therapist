@@ -69,9 +69,17 @@ _cors_origins = os.environ.get(
     "http://localhost:3000,http://127.0.0.1:3000",
 ).split(",")
 
+# Vercel preview URL'leri her deploy'da değişir (`xxx-oykubicavs-projects.vercel.app`).
+# Explicit list + regex kombinasyonu — hem custom domain hem tüm Vercel deploy'ları.
+_cors_regex = os.environ.get(
+    "CBT_CORS_ORIGIN_REGEX",
+    r"https://.*\.vercel\.app",
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in _cors_origins if o.strip()],
+    allow_origin_regex=_cors_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -137,9 +145,18 @@ async def _preload():
     pcards.all_cbt_cards()
     pcards.all_safety_cards()
     safety_rules._load_rules()
+
+    # Embedding index'lerini burada kur. Aksi hâlde ilk kullanıcı mesajı
+    # TF-IDF fit'ini (~3 sn) beklemek zorunda kalıyor; sonraki istekler
+    # lru_cache'ten geliyor.
+    import time
+    t0 = time.time()
+    from pipeline import retriever, safety_classifier
+    retriever._build_card_index()
+    safety_classifier._build_anchor_index()
     log.info(
         "startup_preload_done",
-        extra={"route": "startup"},
+        extra={"route": "startup", "index_build_ms": round((time.time() - t0) * 1000)},
     )
 
 
