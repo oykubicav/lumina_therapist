@@ -22,6 +22,7 @@ const WELCOME =
 export default function ChatWindow() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
+  const [sending, setSending] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSid] = useState<string>("");
@@ -55,6 +56,9 @@ export default function ChatWindow() {
     if (!trimmed || pending) return;
     setPending(true);
     setError(null);
+    setInput("");
+    setSending(trimmed);
+    textareaRef.current?.focus();
     try {
       const res = await postChat({
         user_message: trimmed,
@@ -68,10 +72,11 @@ export default function ChatWindow() {
         ...prev,
         { user_message: trimmed, chat: res, ts: Date.now() },
       ]);
-      setInput("");
-      textareaRef.current?.focus();
+      setSending(null);
     } catch (e: any) {
       setError(e?.message || "Bir hata oluştu.");
+      setSending(null);
+      setInput(trimmed);
     } finally {
       setPending(false);
     }
@@ -216,6 +221,16 @@ useEffect(() => {
               </div>
             </div>
           ))}
+
+          {sending && (
+            <div className="flex justify-end animate-fade-in">
+              <div className="max-w-[85%] rounded-2xl bg-cbt-userBubble dark:bg-cbt-dark-userBubble px-5 py-3.5">
+                <p className="text-[15px] text-cbt-userBubbleText dark:text-cbt-dark-userBubbleText leading-[1.55] whitespace-pre-wrap">
+                  {sending}
+                </p>
+              </div>
+            </div>
+          )}
 
           {pending && (
             <div className="flex justify-start animate-fade-in">

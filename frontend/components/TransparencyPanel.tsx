@@ -17,6 +17,31 @@ interface Props {
     hard_close: "Sert kapanış",
   };
 
+  const MODULE_LABELS: Record<string, string> = {
+    health_anxiety: "Sağlık kaygısı",
+    panic: "Panik",
+    gad: "Yaygın kaygı",
+    depression: "Düşük ruh hali",
+    low_self_esteem: "Özdeğer",
+    insomnia: "Uyku",
+    work_stress: "İş stresi",
+    relationship_stress: "İlişkiler",
+    grief_loss: "Kayıp ve yas",
+    life_transitions: "Yaşam değişimleri",
+    trauma_awareness: "Zor yaşantılar",
+    safety: "Güvenlik",
+    boundary: "Kapsam dışı",
+    unknown: "Henüz belirsiz",
+  };
+
+  const RISK_LABELS: Record<string, string> = {
+    none: "Yok",
+    low: "Düşük",
+    medium: "Orta",
+    high: "Yüksek",
+    critical: "Kritik",
+  };
+
 export default function TransparencyPanel({ turnId, onClose }: Props) {
     const [data, setData] = useState<TransparencyView | null>(null);
     const [loading, setLoading] = useState(true);
@@ -77,40 +102,40 @@ export default function TransparencyPanel({ turnId, onClose }: Props) {
                   <p className="text-cbt-textSecondary">{data.model_version || "—"}</p>
                 </Section>
     
-                {/* Safety route */}
-                {data.safety && (
-                  <Section title="Güvenlik değerlendirmesi">
-                    <ul className="text-cbt-textSecondary space-y-1">
-                      <li>Yol: <span className="font-mono">{data.safety.route}</span></li>
-                      <li>CBT'ye izin verildi: {data.safety.allow_cbt ? "Evet" : "Hayır (safety hard-stop)"}</li>
-                      <li>En yüksek risk: <span className="font-mono">{data.safety.highest_risk}</span></li>
-                      {data.safety.matched_card_ids?.length > 0 && (
-                        <li>Tetiklenen safety kartları: {data.safety.matched_card_ids.join(", ")}</li>
-                      )}
-                    </ul>
-                  </Section>
-                )}
-    
                 {/* Intent */}
                 {data.intent && (
-                  <Section title="Konu tespiti">
+                  <Section title="Hangi konuda içerik arandı">
                     <p className="text-cbt-textSecondary">
-                      {data.intent.module} · {data.intent.subintent}{" "}
+                      {MODULE_LABELS[data.intent.module] || data.intent.module}
                       <span className="text-cbt-textMuted">
-                        (güven: {Math.round(data.intent.confidence * 100)}%)
+                        {" "}· eşleşme %{Math.round(data.intent.confidence * 100)}
                       </span>
+                    </p>
+                    <p className="text-xs text-cbt-textMuted mt-1 leading-relaxed">
+                      Bu bir tanı ya da değerlendirme değil — yalnızca hangi konu
+                      başlığındaki materyallerin getirileceğini belirleyen bir
+                      arama etiketi.
                     </p>
                   </Section>
                 )}
-    
+
                 {/* Retrieved cards */}
                 {data.retrieved_card_ids && data.retrieved_card_ids.length > 0 && (
-                  <Section title={`Bilgi kaynağı (${data.retrieved_card_ids.length} kart)`}>
-                    <ul className="text-cbt-textSecondary text-xs font-mono space-y-1">
-                      {data.retrieved_card_ids.map((id) => (
-                        <li key={id}>• {id}</li>
-                      ))}
-                    </ul>
+                  <Section title={`Kullanılan materyal (${data.retrieved_card_ids.length})`}>
+                    <p className="text-cbt-textSecondary text-xs leading-relaxed">
+                      Cevap, klinik rehberlerden derlenmiş {data.retrieved_card_ids.length} içerik
+                      parçası temel alınarak yazıldı.
+                    </p>
+                  </Section>
+                )}
+
+                {/* Safety route */}
+                {data.safety && (
+                  <Section title="Güvenlik kontrolü">
+                    <p className="text-cbt-textSecondary">
+                      Risk düzeyi: {RISK_LABELS[data.safety.highest_risk] || data.safety.highest_risk}
+                      {!data.safety.allow_cbt && " · Yönlendirme yapıldı"}
+                    </p>
                   </Section>
                 )}
     

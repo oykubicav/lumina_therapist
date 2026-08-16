@@ -215,10 +215,18 @@ def hybrid_retrieve(
 
     except Exception as e:
         # Neo4j down ya da başka bir hata — sadece vektör dön
-        # Loglama için:
         import logging
         logging.warning(f"Graph enrichment failed, falling back to vector-only: {e}")
         return vector_out
+
+    import logging
+    logging.info(
+        "graph_enrichment ok: %d seed → +%d graph card (%d technique, %d neighbor)",
+        len(seed_cards),
+        len(graph_out),
+        sum(1 for c in graph_out if c.source == "graph_technique"),
+        sum(1 for c in graph_out if c.source == "graph_neighbor"),
+    )
 
     # Dedup: card_id → RetrievedCard (en yüksek skor kalır)
     combined: dict[str, RetrievedCard] = {}
