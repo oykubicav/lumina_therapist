@@ -60,7 +60,7 @@ def _background_profile_update(
             current_profile_summary=current_summary if current_summary else None,
         )
 
-        with session_local_factory() as db, db.begin():
+        with session_local_factory() as db:
             profile_store.apply_patch(db, session_id, patch)
 
         log.info(
