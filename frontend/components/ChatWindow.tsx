@@ -15,9 +15,24 @@ import AssessmentReminderBanner from "./AssessmentReminderBanner";
 import TransparencyPanel from "./TransparencyPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { LogIn, LogOut, User } from "lucide-react";
+import { getName, getFocusLabels, clearProfile } from "@/lib/profile";
 
-const WELCOME =
-  "Merhaba, hoş geldin. Bugün seni buraya getiren ne? Kaygı, moral bozukluğu, uyku sorunları ya da aklındaki başka bir şey — ne olursa anlatabilirsin. Acelemiz yok.";
+function buildWelcome(name: string, focusLabels: string[]): string {
+  const greeting = name ? `Merhaba ${name}.` : "Merhaba, hoş geldin.";
+
+  if (focusLabels.length === 0) {
+    return `${greeting} Bugün seni buraya getiren ne? Kaygı, moral bozukluğu, uyku sorunları ya da aklındaki başka bir şey — ne olursa anlatabilirsin. Acelemiz yok.`;
+  }
+
+  const topics =
+    focusLabels.length === 1
+      ? focusLabels[0].toLowerCase()
+      : focusLabels.slice(0, -1).join(", ").toLowerCase() +
+        " ve " +
+        focusLabels[focusLabels.length - 1].toLowerCase();
+
+  return `${greeting} Başlarken ${topics} konusunu işaretlemiştin. İstersen oradan başlayalım, istersen bugün aklında ne varsa onu anlat. Acelemiz yok.`;
+}
 
 export default function ChatWindow() {
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -27,6 +42,9 @@ export default function ChatWindow() {
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSid] = useState<string>("");
   const [showDebug, setShowDebug] = useState(false);
+  const [welcome, setWelcome] = useState(
+    "Merhaba, hoş geldin. Bugün seni buraya getiren ne? Anlatmak istediğin neyse dinliyorum."
+  );
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [transparencyTurnId, setTransparencyTurnId] = useState<string | null>(null);
@@ -102,9 +120,11 @@ export default function ChatWindow() {
       }
     }
     clearSessionId();
+    clearProfile();
     setSid("");
     setTurns([]);
     setError(null);
+    window.location.href = "/";
   };
   // Ölçüm hatırlatması yalnızca hesabı olanlara — anonim oturumda geçmiş
   // saklanmadığı için "bu haftaki ölçüm" ifadesinin karşılığı yok.
@@ -112,6 +132,10 @@ export default function ChatWindow() {
   useEffect(() => {
     setShowBanner(isAuthenticated && shouldPromptNow());
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    setWelcome(buildWelcome(getName(), getFocusLabels()));
+  }, []);
 
   return (
     <div className="flex flex-col h-screen max-h-screen bg-cbt-bg dark:bg-cbt-dark-bg">
@@ -186,7 +210,7 @@ export default function ChatWindow() {
           <div className="flex justify-start animate-fade-in">
             <div className="max-w-[85%] rounded-2xl bg-cbt-assistantBubble dark:bg-cbt-dark-assistantBubble px-5 py-4 shadow-soft border border-cbt-border/40 dark:border-cbt-dark-border/40">
               <p className="text-[15px] text-cbt-text dark:text-cbt-dark-text leading-[1.55]">
-                {WELCOME}
+                {welcome}
               </p>
             </div>
           </div>

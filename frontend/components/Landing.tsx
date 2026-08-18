@@ -12,6 +12,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import SiteFooter from "./SiteFooter";
 
 export default function Landing({ onStart }: { onStart: () => void }) {
   return (
@@ -143,15 +144,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
         </section>
       </main>
 
-      <footer className="border-t border-cbt-border/50 dark:border-cbt-dark-border/50 px-6 py-6">
-        <div className="max-w-5xl mx-auto text-center text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted leading-relaxed">
-          Neva bir terapist, hekim ya da acil servis değildir.
-          <br />
-          Kendine zarar verme düşüncen varsa ya da acil durumdaysan{" "}
-          <span className="font-semibold text-cbt-text dark:text-cbt-dark-text">112</span>
-          'yi ara.
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
