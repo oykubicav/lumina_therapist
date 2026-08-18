@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { hasConsent } from "@/lib/consent";
-import { hasOnboarded } from "@/lib/profile";
+import { hasOnboarded, syncProfileOwner } from "@/lib/profile";
 import ConsentModal from "@/components/ConsentModal";
 import ChatWindow from "@/components/ChatWindow";
 import Landing from "@/components/Landing";
@@ -14,20 +14,28 @@ import { useAuth } from "@/hooks/useAuth";
 type Stage = "landing" | "consent" | "onboarding" | "chat";
 
 export default function Page() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const [state, setState] = useState<Stage>("landing");
   const [mounted, setMounted] = useState(false);
+  const [ownerChecked, setOwnerChecked] = useState(false);
   const [showOptIn, setShowOptIn] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Profil cihazda tutuluyor; hesap değişmişse öncekini taşıma.
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    if (loading) return;
+    syncProfileOwner(user?.email ?? "anon");
+    setOwnerChecked(true);
+  }, [loading, user?.email]);
+
+  useEffect(() => {
+    if (!loading && ownerChecked && isAuthenticated) {
       setState(afterConsent());
     }
-  }, [loading, isAuthenticated]);
+  }, [loading, ownerChecked, isAuthenticated]);
 
   useEffect(() => {
     if (state === "chat" && isAuthenticated && !hasDecided()) {
@@ -41,7 +49,7 @@ export default function Page() {
     return hasOnboarded() ? "chat" : "onboarding";
   }
 
-  if (!mounted || loading) return null;
+  if (!mounted || loading || !ownerChecked) return null;
 
   if (state === "onboarding") {
     return <Onboarding onDone={() => setState("chat")} />;

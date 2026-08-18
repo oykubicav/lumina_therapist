@@ -1,6 +1,8 @@
 const NAME_KEY = "neva_name";
 const FOCUS_KEY = "neva_focus";
 const DONE_KEY = "neva_onboarded";
+const OWNER_KEY = "neva_profile_owner";
+const FOCUS_USED_KEY = "neva_focus_used";
 
 export interface FocusOption {
   id: string;
@@ -38,10 +40,25 @@ export function getFocus(): string[] {
 }
 
 export function getFocusLabels(): string[] {
+  if (typeof window === "undefined") return [];
+  if (window.localStorage.getItem(FOCUS_USED_KEY) === "true") return [];
   const ids = getFocus();
   return FOCUS_OPTIONS.filter((o) => ids.includes(o.id) && o.id !== "unsure").map(
     (o) => o.label
   );
+}
+
+export function markFocusUsed(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(FOCUS_USED_KEY, "true");
+}
+
+export function syncProfileOwner(ownerId: string): void {
+  if (typeof window === "undefined") return;
+  const stored = window.localStorage.getItem(OWNER_KEY);
+  if (stored === ownerId) return;
+  clearProfile();
+  window.localStorage.setItem(OWNER_KEY, ownerId);
 }
 
 export function saveProfile(name: string, focus: string[]): void {
@@ -71,4 +88,5 @@ export function clearProfile(): void {
   window.localStorage.removeItem(NAME_KEY);
   window.localStorage.removeItem(FOCUS_KEY);
   window.localStorage.removeItem(DONE_KEY);
+  window.localStorage.removeItem(FOCUS_USED_KEY);
 }

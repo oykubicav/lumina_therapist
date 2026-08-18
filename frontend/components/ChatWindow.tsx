@@ -16,13 +16,13 @@ import TransparencyPanel from "./TransparencyPanel";
 import SessionHandoff from "./SessionHandoff";
 import { useAuth } from "@/hooks/useAuth";
 import { LogIn, LogOut, User } from "lucide-react";
-import { getName, getFocusLabels, clearProfile } from "@/lib/profile";
+import { getName, getFocusLabels, markFocusUsed, clearProfile } from "@/lib/profile";
 
 function buildWelcome(name: string, focusLabels: string[]): string {
   const greeting = name ? `Merhaba ${name}.` : "Merhaba, hoş geldin.";
 
   if (focusLabels.length === 0) {
-    return `${greeting} Bugün seni buraya getiren ne? Kaygı, moral bozukluğu, uyku sorunları ya da aklındaki başka bir şey — ne olursa anlatabilirsin. Acelemiz yok.`;
+    return `${greeting} Bugün nasıl gidiyor? Aklından geçen neyse anlatabilirsin.`;
   }
 
   const topics =
@@ -32,7 +32,7 @@ function buildWelcome(name: string, focusLabels: string[]): string {
         " ve " +
         focusLabels[focusLabels.length - 1].toLowerCase();
 
-  return `${greeting} Başlarken ${topics} konusunu işaretlemiştin. İstersen oradan başlayalım, istersen bugün aklında ne varsa onu anlat. Acelemiz yok.`;
+  return `${greeting} Başlarken ${topics} demiştin. İstersen oradan başlayalım, istersen bugün aklında ne varsa onu anlat. Acelemiz yok.`;
 }
 
 export default function ChatWindow() {
@@ -152,8 +152,11 @@ export default function ChatWindow() {
     setShowBanner(isAuthenticated && shouldPromptNow());
   }, [isAuthenticated]);
 
+  // Onboarding'de seçilen konular yalnızca ilk karşılamada anılır.
   useEffect(() => {
-    setWelcome(buildWelcome(getName(), getFocusLabels()));
+    const labels = getFocusLabels();
+    setWelcome(buildWelcome(getName(), labels));
+    if (labels.length > 0) markFocusUsed();
   }, []);
 
   return (

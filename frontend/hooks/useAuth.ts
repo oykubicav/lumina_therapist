@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth";
 import { postLogin, postRegister, getMe, deleteMe } from "@/lib/api";
 import { clearSessionId } from "@/lib/session";
+import { clearProfile } from "@/lib/profile";
 import type { AuthUser } from "@/lib/types";
 
 export function useAuth() {
@@ -47,6 +48,7 @@ export function useAuth() {
 const logout = useCallback(() => {
     clearToken();
     clearSessionId();
+    clearProfile();
     setUser(null);
     router.push("/");
   }, [router]);
@@ -54,6 +56,7 @@ const deleteAccount = useCallback(async () => {
     await deleteMe();
     clearToken();
     clearSessionId();
+    clearProfile();
     setUser(null);
     router.push("/");
   }, [router]);
