@@ -7,8 +7,10 @@ import ChatWindow from "@/components/ChatWindow";
 import Landing from "@/components/Landing";
 import { hasDecided } from "@/lib/assessments";
 import AssessmentOptInModal from "@/components/AssessmentOptInModal";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Page() {
+  const { isAuthenticated, loading } = useAuth();
   const [state, setState] = useState<"landing" | "consent" | "chat">("landing");
   const [mounted, setMounted] = useState(false);
   const [showOptIn, setShowOptIn] = useState(false);
@@ -17,14 +19,22 @@ export default function Page() {
     setMounted(true);
   }, []);
 
+  // Giriş yapmış kullanıcı pazarlama sayfasını görmez, doğrudan sohbete girer.
   useEffect(() => {
-    if (state === "chat" && !hasDecided()) {
+    if (!loading && isAuthenticated) {
+      setState(hasConsent() ? "chat" : "consent");
+    }
+  }, [loading, isAuthenticated]);
+
+  // Ölçüm teklifi yalnızca hesabı olanlara — anonim oturumda veri kalıcı değil.
+  useEffect(() => {
+    if (state === "chat" && isAuthenticated && !hasDecided()) {
       const timer = setTimeout(() => setShowOptIn(true), 2500);
       return () => clearTimeout(timer);
     }
-  }, [state]);
+  }, [state, isAuthenticated]);
 
-  if (!mounted) {
+  if (!mounted || loading) {
     return null;
   }
 

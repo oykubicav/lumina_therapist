@@ -106,10 +106,12 @@ export default function ChatWindow() {
     setTurns([]);
     setError(null);
   };
+  // Ölçüm hatırlatması yalnızca hesabı olanlara — anonim oturumda geçmiş
+  // saklanmadığı için "bu haftaki ölçüm" ifadesinin karşılığı yok.
   const [showBanner, setShowBanner] = useState(false);
-useEffect(() => {
-  setShowBanner(shouldPromptNow());
-}, []);
+  useEffect(() => {
+    setShowBanner(isAuthenticated && shouldPromptNow());
+  }, [isAuthenticated]);
 
   return (
     <div className="flex flex-col h-screen max-h-screen bg-cbt-bg dark:bg-cbt-dark-bg">

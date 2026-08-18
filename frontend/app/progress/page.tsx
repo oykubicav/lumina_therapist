@@ -4,117 +4,127 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Plus } from "lucide-react";
 import { getSessionId } from "@/lib/session";
+import { hasConsent } from "@/lib/consent";
+import ConsentModal from "@/components/ConsentModal";
 import AssessmentTrend from "@/components/AssessmentTrend";
 import AssessmentModal from "@/components/AssessmentModal";
 import type { AssessmentKind } from "@/lib/types";
 
-
 export default function ProgressPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [needsConsent, setNeedsConsent] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [activeKind, setActiveKind] = useState<AssessmentKind>("phq9");
   const [showModal, setShowModal] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);   // submit sonrası chart'ı yenile
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    const sessionid = getSessionId();
-        setSessionId(sessionid);
+    setMounted(true);
+    const sid = getSessionId();
+    if (sid) {
+      setSessionId(sid);
+    } else if (!hasConsent()) {
+      // Ölçüm yapmak için sohbet şart değil, ama kayıt tutabilmek için
+      // önce onay + oturum gerekiyor.
+      setNeedsConsent(true);
+    }
   }, []);
 
-  // Session yoksa — chat başlatmadan progress'e gelinemiyor
-  if (sessionId === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-cbt-bg dark:bg-cbt-dark-bg">
-        <div className="max-w-md text-center">
-          <p className="text-cbt-textSecondary dark:text-cbt-dark-textSecondary mb-4">
-            İlerlemeni görmek için önce sohbet başlatman gerek.
-          </p>
-          <Link
-            href="/"
-            className="inline-block px-6 py-3 rounded-xl bg-cbt-accent text-white font-medium"
-          >
-            Ana sayfaya dön
-          </Link>
-        </div>
-      </div>
-    );
+  function handleConsentGranted() {
+    setNeedsConsent(false);
+    setSessionId(getSessionId());
+  }
+
+  if (!mounted) return null;
+
+  if (needsConsent) {
+    return <ConsentModal onGranted={handleConsentGranted} />;
   }
 
   return (
     <div className="min-h-screen bg-cbt-bg dark:bg-cbt-dark-bg">
-      {/* Header */}
-      <header className="border-b border-cbt-border dark:border-cbt-dark-border">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-30 border-b border-cbt-border/50 dark:border-cbt-dark-border/50 bg-cbt-bg/80 dark:bg-cbt-dark-bg/80 backdrop-blur-xl">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-cbt-textSecondary dark:text-cbt-dark-textSecondary hover:text-cbt-text"
+            className="flex items-center gap-1.5 text-[13px] text-cbt-textMuted dark:text-cbt-dark-textMuted hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
           >
-            <ArrowLeft size={18} />
-            <span className="text-sm">Sohbete dön</span>
+            <ArrowLeft size={15} strokeWidth={2} />
+            Sohbete dön
           </Link>
-          <h1 className="text-lg font-medium text-cbt-text dark:text-cbt-dark-text">
-            İlerlemem
-          </h1>
+          <span className="text-[15px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text">
+            Gelişimim
+          </span>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-1 text-sm text-cbt-accent hover:text-cbt-accent/80"
+            className="flex items-center gap-1 text-[13px] font-medium text-cbt-text dark:text-cbt-dark-text hover:opacity-70 transition-opacity"
           >
-            <Plus size={16} />
+            <Plus size={15} strokeWidth={2} />
             Yeni ölçüm
           </button>
         </div>
       </header>
 
-      {/* Kind selector tabs */}
-      <div className="max-w-3xl mx-auto px-4 pt-6">
-        <div className="flex gap-2 border-b border-cbt-border dark:border-cbt-dark-border">
+      <div className="max-w-3xl mx-auto px-6 pt-8">
+        <div className="flex gap-1">
           <TabButton
             active={activeKind === "phq9"}
             onClick={() => setActiveKind("phq9")}
-            label="Depresyon (PHQ-9)"
+            label="Ruh hali"
           />
           <TabButton
             active={activeKind === "gad7"}
             onClick={() => setActiveKind("gad7")}
-            label="Kaygı (GAD-7)"
+            label="Kaygı"
           />
         </div>
       </div>
 
-      {/* Chart body */}
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="bg-white dark:bg-cbt-dark-surface rounded-2xl p-6 shadow-subtle">
-          <AssessmentTrend
-            key={`${activeKind}-${refreshKey}`}     /* refreshKey değişince chart yeniden yükler */
-            sessionId={sessionId}
-            kind={activeKind}
-          />
+      <main className="max-w-3xl mx-auto px-6 py-8">
+        <div className="bg-cbt-surface dark:bg-cbt-dark-surface rounded-2xl border border-cbt-border/60 dark:border-cbt-dark-border/60 p-7">
+          {sessionId ? (
+            <AssessmentTrend
+              key={`${activeKind}-${refreshKey}`}
+              sessionId={sessionId}
+              kind={activeKind}
+            />
+          ) : (
+            <div className="py-10 text-center">
+              <p className="text-[15px] text-cbt-text dark:text-cbt-dark-text mb-2">
+                Henüz bir ölçümün yok
+              </p>
+              <p className="text-[13px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary mb-6 max-w-sm mx-auto leading-relaxed">
+                İlk ölçümünü yaparak başlangıç noktanı belirleyebilir, zaman
+                içindeki değişimi buradan izleyebilirsin.
+              </p>
+              <button
+                onClick={() => setShowModal(true)}
+                className="inline-flex items-center justify-center px-6 h-11 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[14px] font-medium hover:opacity-85 transition-opacity"
+              >
+                İlk ölçümünü yap
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* KVKK / açıklayıcı not */}
-        <p className="mt-6 text-xs text-cbt-textMuted leading-relaxed text-center max-w-md mx-auto">
-          Bu skorlar bir klinik tanı değildir — sadece zaman içindeki değişimi görmen için
-          işaretlenmiş tarama ölçekleridir. Kendini kötü hissediyorsan, bir uzmanla
-          görüşmek en iyi adım.
+        <p className="mt-6 text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted leading-relaxed text-center max-w-md mx-auto">
+          Bu ölçekler tanı koymaz; yaygın kullanılan tarama araçlarıdır ve
+          yalnızca kendi değişimini takip etmen içindir. Zorlandığını
+          hissediyorsan bir uzmanla görüşmek en iyi adım olur.
         </p>
       </main>
 
-      {/* Assessment modal */}
-      {showModal && (
+      {showModal && sessionId && (
         <AssessmentModal
           sessionId={sessionId}
           kind={activeKind}
           onClose={() => setShowModal(false)}
-          onSubmit={(_r) => {
-            setRefreshKey((k) => k + 1);
-            // Modal'ı ManuAL kapatma — kullanıcı sonuç ekranını görsün
-            // Kullanıcı "Tamam"a basınca onClose tetiklenir
-          }}
+          onSubmit={() => setRefreshKey((k) => k + 1)}
         />
       )}
     </div>
   );
 }
-
 
 function TabButton({
   active,
@@ -128,14 +138,13 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 text-sm border-b-2 transition-colors ${
+      className={
         active
-          ? "border-cbt-accent text-cbt-accent"
-          : "border-transparent text-cbt-textMuted hover:text-cbt-text"
-      }`}
+          ? "px-4 h-9 rounded-full text-[13px] font-medium bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg transition-all"
+          : "px-4 h-9 rounded-full text-[13px] font-medium text-cbt-textSecondary dark:text-cbt-dark-textSecondary hover:text-cbt-text dark:hover:text-cbt-dark-text transition-all"
+      }
     >
       {label}
     </button>
   );
 }
-
