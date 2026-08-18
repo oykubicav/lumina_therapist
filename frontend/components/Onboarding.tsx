@@ -46,6 +46,9 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
         <div className="w-full max-w-lg">
           {step === 0 ? (
             <div className="animate-fade-in">
+              <div className="text-[13px] font-medium text-cbt-textMuted dark:text-cbt-dark-textMuted mb-3">
+                Hesabın hazır
+              </div>
               <h1 className="text-[32px] sm:text-[38px] font-semibold tracking-[-0.02em] text-cbt-text dark:text-cbt-dark-text leading-tight mb-3">
                 Sana nasıl
                 <br />

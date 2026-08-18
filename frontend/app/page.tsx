@@ -33,7 +33,7 @@ export default function Page() {
 
   useEffect(() => {
     if (!loading && ownerChecked && isAuthenticated) {
-      setState(afterConsent());
+      setState(nextStage());
     }
   }, [loading, ownerChecked, isAuthenticated]);
 
@@ -44,9 +44,12 @@ export default function Page() {
     }
   }, [state, isAuthenticated]);
 
-  function afterConsent(): Stage {
+  // Onboarding yalnızca hesabı olan kullanıcıya, ilk girişinde.
+  // Üyeliksiz kullanımda isim/konu sormanın karşılığı yok.
+  function nextStage(): Stage {
     if (!hasConsent()) return "consent";
-    return hasOnboarded() ? "chat" : "onboarding";
+    if (isAuthenticated && !hasOnboarded()) return "onboarding";
+    return "chat";
   }
 
   if (!mounted || loading || !ownerChecked) return null;
@@ -66,10 +69,12 @@ export default function Page() {
 
   return (
     <>
-      <Landing onStart={() => setState(afterConsent())} />
+      <Landing onStart={() => setState(nextStage())} />
       {state === "consent" && (
         <ConsentModal
-          onGranted={() => setState(hasOnboarded() ? "chat" : "onboarding")}
+          onGranted={() =>
+            setState(isAuthenticated && !hasOnboarded() ? "onboarding" : "chat")
+          }
         />
       )}
     </>
