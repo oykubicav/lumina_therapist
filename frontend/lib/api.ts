@@ -66,6 +66,12 @@ export async function deleteSession(sessionId: string): Promise<{ deleted: boole
   return fetchJson(`/chat/session/${sessionId}`, { method: "DELETE" });
 }
 
+export async function getSessionRecap(
+  sessionId: string
+): Promise<{ session_id: string; recap: string }> {
+  return fetchJson(`/chat/session/${sessionId}/recap`);
+}
+
 
 // Cards
 export async function listCards(params: {

@@ -5,6 +5,7 @@ import { submitAssessment } from "@/lib/api";
 import {
   PHQ9_QUESTIONS_TR, GAD7_QUESTIONS_TR,
   LIKERT_OPTIONS_TR, SEVERITY_LABELS_TR, SEVERITY_COLORS,
+  markAssessmentTaken,
 } from "@/lib/assessments";
 import type { AssessmentKind, AssessmentSubmitResponse } from "@/lib/types";
 import { AlertTriangle, X, ChevronRight } from "lucide-react";
@@ -52,6 +53,7 @@ export default function AssessmentModal({ sessionId, kind, onClose, onSubmit }: 
             answers: answers as number[],
         });
         setResult(response);
+        markAssessmentTaken();
         onSubmit?.(response);
 
     } catch (err: any) {

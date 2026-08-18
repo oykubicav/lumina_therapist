@@ -154,7 +154,8 @@ Prompt'ta kartlar `[CBT CARD: pa_grounding_004]`, `[SAFETY CARD: safety_self_har
 Bir cümle bile bu kuralı ihlal ederse cevap tamamen reddedilir ve baştan yazdırılır."""
 
 # Session boundary — tek oturumu makul uzunlukta tutar, erişimi kesmez.
-# Sınıra gelindiğinde konuşma bitmez; yeni bir oturuma devredilir.
+# Sınıra gelindiğinde konuşma bitmez; kullanıcıya bırakma seçeneği sunulur.
+_MIDPOINT_CHECK = 12            # ara kontrol: anladığını yansıt, doğrula
 _BOUNDARY_SOFT_START = 26       # ısınma başlar
 _BOUNDARY_CLOSING_START = 34    # kapanış teklifi
 _BOUNDARY_EXTENDED_END = 44     # son esneklik
@@ -345,6 +346,21 @@ def _boundary_prompt_layer(turn_count: int) -> str:
         Sistem prompt'una eklenecek Türkçe direktif. turn_count normal
         aralıktaysa (< _BOUNDARY_SOFT_START) boş string döner.
     """
+    if turn_count == _MIDPOINT_CHECK:
+        return (
+            "\n\nSEANS AKIŞI — ara kontrol:\n"
+            "Konuşma bir yere geldi. Bu turda kullanıcının anlattıklarından "
+            "çıkardığın tabloyu iki-üç cümlede topla ve doğru anlayıp "
+            "anlamadığını sor.\n"
+            "- Bu bir değerlendirme ya da teşhis değil; 'seni şöyle analiz ettim' "
+            "  tonundan uzak dur. 'Anladığım şu, doğru mu?' tonu kullan.\n"
+            "- Kullanıcıyı kategorize etme, özellik listesi çıkarma, güçlü/zayıf "
+            "  yön sayma.\n"
+            "- Sadece onun kendi anlattıklarını yansıt; yorum ekleme.\n"
+            "- Sonda düzeltme alanı bırak: eksik ya da yanlış bir şey varsa "
+            "  söylemesini iste."
+        )
+
     if turn_count < _BOUNDARY_SOFT_START:
         return ""
 
@@ -368,15 +384,16 @@ def _boundary_prompt_layer(turn_count: int) -> str:
         )
 
     return (
-        "\n\nSEANS UZUNLUĞU — devir noktası:\n"
-        "Bu oturum bugünlük yeterince uzadı. Kullanıcıyı engellemiyorsun, "
-        "sadece taze bir sayfaya davet ediyorsun:\n"
+        "\n\nSEANS AKIŞI — kapanışa yaklaşma:\n"
+        "Bu oturum bugünlük yeterince uzadı. Kullanıcıyı engellemiyorsun; "
+        "karar ona ait:\n"
         "- Bugün konuşulanları iki-üç cümlede topla.\n"
-        "- Kullanıcı isterse yeni bir oturumda kaldığınız yerden devam "
-        "  edebileceğini, konuştuklarınızın hatırlanacağını söyle.\n"
-        "- Yeni bir konu açma, yeni egzersiz verme, soru sorma.\n"
-        "- Kullanıcı ısrarla devam etmek isterse kısa bir cevap ver ama "
-        "  yeniden aynı daveti yap."
+        "- Varsa üzerinde durduğunuz somut adımı bir kez hatırlat.\n"
+        "- Sonda 'bugünlük burada bırakalım mı, yoksa devam mı edelim?' "
+        "  diye sor. Dayatma, kapatma; gerçek bir soru olsun.\n"
+        "- Yeni konu açma, yeni egzersiz verme.\n"
+        "- Kullanıcı devam etmek isterse normal şekilde devam et, aynı "
+        "  soruyu her turda tekrarlama."
     )
 
 # History block formatter + summarizer

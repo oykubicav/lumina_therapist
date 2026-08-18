@@ -47,6 +47,7 @@ export default function ChatWindow() {
     "Merhaba, hoş geldin. Bugün seni buraya getiren ne? Anlatmak istediğin neyse dinliyorum."
   );
   const [boundary, setBoundary] = useState("normal");
+  const [handoffDismissed, setHandoffDismissed] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [transparencyTurnId, setTransparencyTurnId] = useState<string | null>(null);
@@ -134,6 +135,7 @@ export default function ChatWindow() {
     setSid("");
     setTurns([]);
     setBoundary("normal");
+    setHandoffDismissed(false);
     setError(null);
     setWelcome(
       getName()
@@ -285,8 +287,12 @@ export default function ChatWindow() {
             </div>
           )}
 
-          {boundary === "hard_close" && !pending && (
-            <SessionHandoff onStartNew={startFreshSession} />
+          {boundary === "hard_close" && !pending && !handoffDismissed && sessionId && (
+            <SessionHandoff
+              sessionId={sessionId}
+              onStartNew={startFreshSession}
+              onDismiss={() => setHandoffDismissed(true)}
+            />
           )}
 
           {error && (

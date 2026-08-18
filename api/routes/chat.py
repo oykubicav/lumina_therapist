@@ -16,7 +16,7 @@ from typing import List
 from typing import Optional
 
 
-from fastapi import APIRouter, Depends, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, Request, BackgroundTasks, HTTPException
 
 from api.schemas import (
     ChatRequest, ChatResponse,
@@ -28,6 +28,8 @@ from api import profile_store
 from pipeline import orchestrator
 from pipeline.profile_extractor import extract_profile_patch
 from pipeline.composer import get_boundary_state
+from pipeline.llm_adapter import llm_complete
+from pipeline import config as pipeline_config
 from api.auth.dependencies import get_current_user_optional
 from api.db.models import User
 
@@ -254,6 +256,51 @@ async def delete_session(
     """KVKK — kullanıcı silme talebi endpoint'i."""
     deleted = store.delete(session_id)
     return {"deleted": deleted, "session_id": session_id}
+
+
+@router.get("/session/{session_id}/recap")
+async def session_recap(
+    session_id: str,
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Oturum sonu özeti — kullanıcıya gösterilmek üzere."""
+    history = store.get_history(session_id)
+    if len(history) < 3:
+        raise HTTPException(status_code=400, detail="Özet için yeterli konuşma yok")
+
+    transcript = "\n\n".join(
+        f"Kullanıcı: {h.get('user_message', '')}\nNeva: {h.get('response', '')}"
+        for h in history[-30:]
+    )
+
+    system = (
+        "Bir CBT destek konuşmasının sonunda kullanıcıya gösterilecek kısa bir "
+        "kapanış notu yazıyorsun. Doğrudan kullanıcıya, ikinci tekil şahısla "
+        "Türkçe yaz.\n\n"
+        "Üç bölüm olsun, her biri başlıksız ve kısa:\n"
+        "1. Bugün konuştuklarınızın iki-üç cümlelik özeti.\n"
+        "2. Konuşmada beliren örüntüyü tek cümlede adlandır. Tanı koyma, "
+        "kategorize etme, kişilik yorumu yapma.\n"
+        "3. Denemesi için tek bir küçük, somut adım. Konuşmada zaten "
+        "konuştuysanız onu hatırlat; yoksa uygun olan bir tane öner.\n\n"
+        "Kurallar: Tanı koyma. Övgü yapma. 'Harikasın', 'çok güçlüsün' gibi "
+        "boş cümleler kurma. Madde işareti ve başlık kullanma, akıcı paragraflar "
+        "yaz. Toplam 120 kelimeyi geçme."
+    )
+
+    try:
+        resp = llm_complete(
+            system=system,
+            user=transcript,
+            model=pipeline_config.LLM_MODEL_COMPOSER,
+            max_tokens=400,
+            temperature=0.3,
+            redact=True,
+        )
+        return {"session_id": session_id, "recap": resp.text.strip()}
+    except Exception:
+        log.exception("session recap failed")
+        raise HTTPException(status_code=503, detail="Özet şu an oluşturulamadı")
 
 
 
