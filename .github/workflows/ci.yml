@@ -32,6 +32,7 @@ jobs:
           CBT_LLM_PROVIDER: mock
           CBT_PREFER_ST: "0"
           CBT_HASH_SALT: ci-test-salt
+          CBT_JWT_SECRET: ci-test-secret-at-least-32-characters-long
         run: |
           pytest -v tests/
 

@@ -139,6 +139,13 @@ async def _preload():
     # DB engine — fail fast if URL is bad
     from api.db import init_engine
     init_engine()
+
+    from api.auth.jwt_utils import secret_is_configured
+    if not secret_is_configured():
+        log.warning(
+            "jwt_secret_missing",
+            extra={"route": "startup"},
+        )
     # Pipeline warm-up
     from pipeline import cards as pcards
     from pipeline import safety_rules

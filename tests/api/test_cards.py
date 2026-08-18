@@ -54,8 +54,11 @@ def test_get_nonexistent_card(client):
 def test_topics(client):
     r = client.get("/cards/topics")
     body = r.json()
-    assert len(body["topics"]) == 5
-    for t in body["topics"]:
+    topics = body["topics"]
+    assert len(topics) >= 5
+    ids = {t["topic"] for t in topics}
+    assert {"panic", "depression", "gad"} <= ids
+    for t in topics:
         assert t["count"] > 0
         assert t["display_name_tr"]
 
