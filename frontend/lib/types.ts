@@ -43,6 +43,8 @@ export interface ChatResponse {
   retrieved_card_ids: string[];
   critic: CriticView;
   timing_ms: Record<string, number>;
+  boundary_state?: string;
+  turn_count?: number;
 }
 
 export interface ChatOptions {

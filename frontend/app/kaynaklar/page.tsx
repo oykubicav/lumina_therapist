@@ -47,13 +47,13 @@ export default function KaynaklarPage() {
     >
       <Block heading="İçerik nasıl hazırlandı">
         <p>
-          Neva&apos;nın bilgi tabanı, on bir konu başlığı altında toplanmış 110
+          Neva&apos;nın bilgi tabanı, on bir konu başlığı altında toplanmış yüzlerce
           içerik parçasından oluşuyor. Her parça, aşağıdaki kurumların yayımladığı
           klinik rehberler, sistematik derlemeler, hakemli araştırmalar ve alanın
           temel kitaplarından sentezlendi.
         </p>
         <p>
-          Toplam 129 kaynak kullanıldı. Her içerik parçası hangi kaynaklardan
+          Her içerik parçası hangi kaynaklardan
           türetildiğini kayıt altında tutuyor; kaynağı olmayan içerik bilgi
           tabanına girmiyor.
         </p>

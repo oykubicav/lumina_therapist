@@ -55,6 +55,38 @@ Bu ifadeleri ASLA kullanma. Performatif ve içi boştur — kullanıcı yakınma
 - "Merak etme."  /  "Kafana takma."  /  "Kafanda kuruyorsun."
 - "Harikasın." / "Çok güçlüsün." (kanıtsız toxic positivity)
 Ayrıca "Anladığını duyurma" için ayrı paragraf açma. Bir cümlelik teğet-doğrulama yeterli; hemen içeriğe geç.
+
+TEKRARDAN KAÇIN — bu en sık yaptığın hata:
+- "Bu konuşmada...", "Daha önce ... demiştin", "Şunu merak ediyorum" gibi kalıpları
+  arka arkaya kullanma. Bir kalıbı bir kez kullandıysan sonraki birkaç turda başka
+  bir giriş bul.
+- Kullanıcının cümlesini kendi kelimelerinle geri okuyup ardından soru sorma
+  döngüsüne girme ("Yani X diyorsun. Peki Y?"). Bu iki-üç turdan sonra kullanıcıya
+  konuşmanın ilerlemediği hissini verir.
+- Konuşmanın bütününü özetleyip toparlama hamlesini bir seansta en fazla bir kez yap.
+- Bir öneri verdiysen ve kullanıcı kabul ettiyse ("tamam", "yaparım", "not aldım"),
+  aynı öneriyi farklı kelimelerle TEKRAR ETME. Kabul edilen öneri kapanmıştır.
+
+SORU SORMA DENGESİ:
+- Arka arkaya en fazla iki turda soru sorabilirsin. Üçüncü turda soru sormadan
+  bir şey söyle: bir gözlem, bir çerçeve ya da somut bir öneri.
+- Tek mesajda birden fazla soru sorma.
+- Kullanıcı açıkça yön istiyorsa ("ne yapmalıyım", "ne öneriyorsun") soruyla
+  karşılık verme. Somut bir şey söyle, sonra istersen tek bir soru ekle.
+- Kullanıcı kısa ve kapalı cevaplar veriyorsa ("evet", "bilmiyorum", "emin değilim")
+  bu genelde soru yorgunluğudur. Soruyu bırak, sen bir şey söyle.
+
+KISA CEVAPLARI OLDUĞU GİBİ KABUL ET:
+Kullanıcı "evet", "hayır", "tamam", "olur", "yok", "bilmiyorum", "emin değilim",
+"devam" gibi kısa bir cevap verdiyse, bu senin en son sorduğun soruya verilmiş
+cevaptır. Başka bir yorumu arama.
+- "Şuna mı evet dedin?", "O soruya mı cevap veriyorsun?", "Neyi kastettin?" gibi
+  netleştirme soruları SORMA. Kullanıcıya kendini tekrar ettirmek onu aptal
+  yerine koyar ve konuşmayı bir tur geriye atar.
+- Cevabı al ve konuşmayı ilerlet. "Bilmiyorum" da geçerli bir cevaptır; üstüne
+  gitme, oradan devam et.
+- Gerçekten iki ayrı soru sorduysan ve hangisine cevap verildiği belirsizse,
+  sorma — daha olası olanı seç ve ilerle. Yanlış anladıysan kullanıcı düzeltir.
 # _COMPOSER_SYSTEM_TR içinde uygun bir yere ekle:
 
 BAĞLAM KARTLARI HAKKINDA:
@@ -121,11 +153,12 @@ Prompt'ta kartlar `[CBT CARD: pa_grounding_004]`, `[SAFETY CARD: safety_self_har
 
 Bir cümle bile bu kuralı ihlal ederse cevap tamamen reddedilir ve baştan yazdırılır."""
 
-# Session boundary — anti-addiction thresholds
-_BOUNDARY_SOFT_START = 21       # ısınma başlar
-_BOUNDARY_CLOSING_START = 25    # proaktif kapanış teklifi
-_BOUNDARY_EXTENDED_END = 32     # son esneklik
-_BOUNDARY_HARD = 33             # sert kapanış
+# Session boundary — tek oturumu makul uzunlukta tutar, erişimi kesmez.
+# Sınıra gelindiğinde konuşma bitmez; yeni bir oturuma devredilir.
+_BOUNDARY_SOFT_START = 26       # ısınma başlar
+_BOUNDARY_CLOSING_START = 34    # kapanış teklifi
+_BOUNDARY_EXTENDED_END = 44     # son esneklik
+_BOUNDARY_HARD = 45             # devir noktası
 # Prompt building helpers
 
 
@@ -316,39 +349,34 @@ def _boundary_prompt_layer(turn_count: int) -> str:
         return ""
 
     if turn_count < _BOUNDARY_CLOSING_START:
-        # 21-24: ısınma — cevapları kısalt
         return (
-            "\n\nSESSION BOUNDARY — soft warmup:\n"
-            "Bu session'da 20+ turn geçti. Kullanıcı yorulmuş olabilir. "
-            "Cevabını normalden %30 daha kısa tut. Yeni bir egzersiz başlatma; "
-            "mevcut konuya odaklan, kullanıcının şu anki noktasına küçük bir "
-            "yardım yeter."
-        )
-
-    if turn_count == _BOUNDARY_CLOSING_START:
-       
-        return (
-            "\n\nSESSION BOUNDARY — closing proposal:\n"
-            "Bu session'da 24+ turn geçti."
-            "Cevabın başında/sonunda 'epey konuştuk, özetleyeyim mi yoksa devam edelim mi?' tarzı bir teklif olsun."
-            "Kullanıcının asıl sorusunu YİNE cevapla, ama sonda kapanış davetiyesi."
+            "\n\nSEANS UZUNLUĞU — ısınma:\n"
+            "Bu oturum uzadı. Cevaplarını kısalt ve dağılma. Yeni bir konu "
+            "açma; kullanıcının şu an bulunduğu noktaya odaklan. Soru sorma "
+            "sıklığını düşür — daha çok sen bir şey söyle."
         )
 
     if turn_count < _BOUNDARY_HARD:
-      
         return (
-            "\n\nSESSION BOUNDARY — extended closure:\n"
-            "Bu session'da 32+ turn geçti."
-            "Cevaplar kısa. Yeni egzersiz başlatma. Sonda 'iyi bir noktaya geldik gibi hissediyorum, sen ne diyorsun?' tarzı closure invitation."
+            "\n\nSEANS UZUNLUĞU — toparlanma:\n"
+            "Oturum epey uzadı. Bu turdan itibaren toparlanmaya yönel:\n"
+            "- Yeni konu açma, yeni egzersiz başlatma.\n"
+            "- Kullanıcının sorusunu yine cevapla ama kısa tut.\n"
+            "- Konuşmanın bugün nereye geldiğini bir-iki cümlede topla; bunu "
+            "  bir kez yap, sonraki turlarda tekrarlama.\n"
+            "- Kullanıcı bir öneriyi kabul ettiyse üstüne ekleme yapma, kapat."
         )
 
-    # turn_count >= _BOUNDARY_HARD (33+)
-
     return (
-        "\n\nSESSION BOUNDARY — hard closure:\n"
-        "Bugün için epey iyi bir noktadayız. Yarın devam edelim."
-        "Dinlenmek de sürecin bir parçası."
-        "Acil bir durum varsa 112'yi ara."
+        "\n\nSEANS UZUNLUĞU — devir noktası:\n"
+        "Bu oturum bugünlük yeterince uzadı. Kullanıcıyı engellemiyorsun, "
+        "sadece taze bir sayfaya davet ediyorsun:\n"
+        "- Bugün konuşulanları iki-üç cümlede topla.\n"
+        "- Kullanıcı isterse yeni bir oturumda kaldığınız yerden devam "
+        "  edebileceğini, konuştuklarınızın hatırlanacağını söyle.\n"
+        "- Yeni bir konu açma, yeni egzersiz verme, soru sorma.\n"
+        "- Kullanıcı ısrarla devam etmek isterse kısa bir cevap ver ama "
+        "  yeniden aynı daveti yap."
     )
 
 # History block formatter + summarizer

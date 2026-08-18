@@ -13,6 +13,7 @@ import { LineChart } from "lucide-react";
 import { shouldPromptNow } from "@/lib/assessments";
 import AssessmentReminderBanner from "./AssessmentReminderBanner";
 import TransparencyPanel from "./TransparencyPanel";
+import SessionHandoff from "./SessionHandoff";
 import { useAuth } from "@/hooks/useAuth";
 import { LogIn, LogOut, User } from "lucide-react";
 import { getName, getFocusLabels, clearProfile } from "@/lib/profile";
@@ -45,6 +46,7 @@ export default function ChatWindow() {
   const [welcome, setWelcome] = useState(
     "Merhaba, hoş geldin. Bugün seni buraya getiren ne? Anlatmak istediğin neyse dinliyorum."
   );
+  const [boundary, setBoundary] = useState("normal");
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [transparencyTurnId, setTransparencyTurnId] = useState<string | null>(null);
@@ -90,6 +92,7 @@ export default function ChatWindow() {
         ...prev,
         { user_message: trimmed, chat: res, ts: Date.now() },
       ]);
+      setBoundary(res.boundary_state || "normal");
       setSending(null);
     } catch (e: any) {
       setError(e?.message || "Bir hata oluştu.");
@@ -126,6 +129,20 @@ export default function ChatWindow() {
     setError(null);
     window.location.href = "/";
   };
+  const startFreshSession = async () => {
+    clearSessionId();
+    setSid("");
+    setTurns([]);
+    setBoundary("normal");
+    setError(null);
+    setWelcome(
+      getName()
+        ? `Yeni bir sayfa açtık ${getName()}. Konuştuklarımız aklımda — bugün kaldığımız yerden devam edebiliriz, istersen başka bir şeyle başlayabilirsin.`
+        : "Yeni bir sayfa açtık. Konuştuklarımız aklımda — kaldığımız yerden devam edebiliriz, istersen başka bir şeyle başlayabilirsin."
+    );
+    textareaRef.current?.focus();
+  };
+
   // Ölçüm hatırlatması yalnızca hesabı olanlara — anonim oturumda geçmiş
   // saklanmadığı için "bu haftaki ölçüm" ifadesinin karşılığı yok.
   const [showBanner, setShowBanner] = useState(false);
@@ -266,6 +283,10 @@ export default function ChatWindow() {
                 <span className="typing-dot" />
               </div>
             </div>
+          )}
+
+          {boundary === "hard_close" && !pending && (
+            <SessionHandoff onStartNew={startFreshSession} />
           )}
 
           {error && (

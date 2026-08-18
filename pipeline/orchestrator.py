@@ -135,29 +135,6 @@ def respond(
     t0 = time.time()
     safety = safety_classifier.classify(user_message, enable_layer3=True)
     t["safety_ms"] = (time.time() - t0) * 1000
-    if turn_count >= _BOUNDARY_HARD and safety.allow_cbt:
-        return Turn(
-            user_message=user_message,
-            response_text=_HARD_CLOSE_TEMPLATE_TR,
-            safety=safety,
-            intent=None,
-            retrieved=[],
-            critic={
-                "passed": True,
-                "method": "boundary_bypass",
-                "llm_used": False,
-                "findings": [],
-            },
-            critic_history=[],
-            rewrite_count=0,
-            used_fallback=False,
-            timing_ms=t,
-            branch="boundary_hard_close",
-            model="canned",
-            provider="internal",
-        )
-
-
 
 
 
