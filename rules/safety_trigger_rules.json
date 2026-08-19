@@ -675,7 +675,9 @@
         "horlarken",
         "yüksek sesle horluyorum",
         "eşim horladığımı",
-        "partnerim horladığımı"
+        "partnerim horladığımı",
+        "çok horluyorum",
+        "horlama sorunum"
       ],
       "feature_only": true
     },
@@ -688,7 +690,13 @@
         "boğularak uyanıyorum",
         "boğulur gibi uyanıyorum",
         "havasız uyanıyorum",
-        "nefes tıkanıklığı"
+        "nefes tıkanıklığı",
+        "nefesimin sık sık durduğunu",
+        "nefesim sık sık duruyor",
+        "nefesim kesiliyor",
+        "nefes durması",
+        "nefesim durup duruyor",
+        "uykuda nefesim duruyor"
       ],
       "feature_only": true
     },
