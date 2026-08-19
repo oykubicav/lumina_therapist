@@ -133,31 +133,29 @@ export default function ChatWindow() {
     window.location.href = "/";
   };
   // Kullanıcı kontrol sorusunu onayladı: tam kriz yanıtı istenir.
-  const confirmCrisis = async (turnId: string) => {
+  // Kontrol sorusuna verilen yanıt her iki durumda da geçmişe yazılır; aksi
+  // hâlde konuşmada cevapsız bir soru kalır ve sonraki turda bağlam bozulur.
+  const answerCrisisCheck = async (turnId: string, confirmed: boolean) => {
+    const text = confirmed ? "Evet, öyle." : "Hayır, öyle değil.";
     setDeniedTurns((prev) => new Set(prev).add(turnId));
     setPending(true);
     setError(null);
     try {
       const res = await postChat({
-        user_message: "Evet, öyle.",
+        user_message: text,
         session_id: sessionId || undefined,
-        crisis_confirmed: true,
+        ...(confirmed ? { crisis_confirmed: true } : {}),
       });
       setTurns((prev) => [
         ...prev,
-        { user_message: "Evet, öyle.", chat: res, ts: Date.now() },
+        { user_message: text, chat: res, ts: Date.now() },
       ]);
     } catch (e: any) {
       setError(e?.message || "Bir hata oluştu.");
     } finally {
       setPending(false);
+      textareaRef.current?.focus();
     }
-  };
-
-  // "Hayır" — kart kapanır, sohbet olağan biçimde sürer.
-  const denyCrisis = (turnId: string) => {
-    setDeniedTurns((prev) => new Set(prev).add(turnId));
-    textareaRef.current?.focus();
   };
 
   const startFreshSession = async () => {
@@ -290,8 +288,8 @@ export default function ChatWindow() {
               {t.chat.safety?.needs_confirmation && !deniedTurns.has(t.chat.turn_id) && (
                 <div className="mt-3">
                   <CrisisConfirm
-                    onConfirm={() => confirmCrisis(t.chat.turn_id)}
-                    onDeny={() => denyCrisis(t.chat.turn_id)}
+                    onConfirm={() => answerCrisisCheck(t.chat.turn_id, true)}
+                    onDeny={() => answerCrisisCheck(t.chat.turn_id, false)}
                   />
                 </div>
               )}
