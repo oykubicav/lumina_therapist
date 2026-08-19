@@ -28,6 +28,7 @@ interface Props {
     relationship_stress: "İlişkiler",
     grief_loss: "Kayıp ve yas",
     life_transitions: "Yaşam değişimleri",
+    social_anxiety: "Sosyal kaygı",
     trauma_awareness: "Zor yaşantılar",
     safety: "Güvenlik",
     boundary: "Kapsam dışı",

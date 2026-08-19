@@ -37,7 +37,7 @@ router = APIRouter(prefix="/cards", tags=["cards"])
 @router.get("", response_model=CBTCardListResponse)
 async def list_cards(
     topic: Optional[Literal[
-        "health_anxiety", "panic", "gad", "depression", "low_self_esteem", "insomnia", "work_stress", "relationship_stress", "grief_loss", "life_transitions", "trauma_awareness"
+        "health_anxiety", "panic", "gad", "depression", "low_self_esteem", "insomnia", "work_stress", "relationship_stress", "grief_loss", "life_transitions", "trauma_awareness", "social_anxiety"
     ]] = Query(None),
     type: Optional[Literal[
         "psychoeducation", "self_assessment", "exercise", "technique", "safety"

@@ -26,9 +26,10 @@ TOPIC_DISPLAY_TR = {
     "grief_loss": "Yas ve Kayıp",
     "life_transitions": "Yaşam Geçişleri",
     "trauma_awareness": "Travma Farkındalığı",
+    "social_anxiety": "Sosyal Kaygı",
 }
 
-TOPICS_ORDER = ["health_anxiety", "panic", "gad", "depression", "low_self_esteem", "insomnia", "work_stress", "relationship_stress", "grief_loss", "life_transitions", "trauma_awareness"]
+TOPICS_ORDER = ["health_anxiety", "panic", "gad", "depression", "low_self_esteem", "insomnia", "work_stress", "relationship_stress", "grief_loss", "life_transitions", "trauma_awareness", "social_anxiety"]
 
 
 def filter_cbt_cards(

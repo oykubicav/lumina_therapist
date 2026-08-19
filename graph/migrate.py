@@ -20,7 +20,9 @@ MODULE_NEIGHBORS = [
     ("grief_loss", "life_transitions"),
     ("work_stress", "depression"),
     ("life_transitions","depression"),
-    
+    ("social_anxiety", "low_self_esteem"),
+    ("social_anxiety", "gad"),
+    ("social_anxiety", "panic"),
 ]
 
 

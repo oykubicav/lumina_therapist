@@ -34,6 +34,8 @@ const TOPIC_DESCRIPTIONS: Record<string, string> = {
     "Taşınma, ayrılık, mezuniyet gibi büyük yaşam değişimlerine uyum üzerine.",
   trauma_awareness:
     "Zor yaşantıların etkilerini tanımak ve destek seçeneklerini bilmek üzerine.",
+  social_anxiety:
+    "Başkalarının değerlendirmesinden çekinme, sosyal ortamlarda gerginlik ve kaçınma üzerine.",
 };
 
 export default function CardList() {
