@@ -19,6 +19,7 @@ export interface SafetyView {
   allow_cbt: boolean;
   highest_risk: RiskLevel;
   matched_card_ids: string[];
+  needs_confirmation?: boolean;
 }
 
 export interface IntentView {
@@ -59,6 +60,7 @@ export interface ChatRequest {
   user_message: string;
   session_id?: string;
   options?: ChatOptions;
+  crisis_confirmed?: boolean;
 }
 
 // UI-local view of a turn — includes both the user prompt and assistant response

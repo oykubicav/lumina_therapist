@@ -141,7 +141,7 @@ async def chat(
             enable_intent=req.options.enable_intent,
             max_rewrites=req.options.max_rewrites,
             temperature=req.options.temperature,
-            
+            crisis_confirmed=req.crisis_confirmed,
         )
     except Exception as e:
         log.exception(
@@ -228,6 +228,7 @@ async def chat(
             allow_cbt=turn.safety.allow_cbt,
             highest_risk=turn.safety.highest_risk,
             matched_card_ids=turn.safety.safety_card_ids,
+            needs_confirmation=getattr(turn.safety, "needs_confirmation", False),
         ),
         intent=IntentView(
             module=intent_module,

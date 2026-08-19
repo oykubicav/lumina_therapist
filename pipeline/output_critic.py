@@ -153,6 +153,11 @@ def _rule_pass(response_text: str, safety: SafetyDecision) -> List[Finding]:
     txt = response_text
     low = txt.lower()
 
+    # Doğrulama turunda cevap bir kontrol sorusudur; 112 ve uzman yönlendirmesi
+    # kullanıcı onayladıktan sonraki turda gelir. Bu turda aranmaz.
+    if getattr(safety, "needs_confirmation", False):
+        return findings
+
     # R1: If safety fired (allow_cbt=False), 112 or "acil" must appear.
     if not safety.allow_cbt:
         if "112" not in txt and "acil" not in low:
@@ -531,7 +536,9 @@ def critique(
 
     llm_findings: List[Finding] = []
     llm_used = False
-    if enable_llm:
+    # Doğrulama turunda LLM denetimi de atlanır: o katman da eskalasyon arıyor,
+    # oysa bu turun amacı kullanıcıya doğru anlaşılıp anlaşılmadığını sormak.
+    if enable_llm and not getattr(safety, "needs_confirmation", False):
         llm_findings = _llm_pass(response_text, safety, user_message)
         llm_used = True
 

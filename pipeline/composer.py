@@ -325,6 +325,24 @@ def _build_user_prompt(
             seen.add(r.card_id)
 
     branch_note = (
+        "BRANCH: GÜVENLİK KONTROLÜ — ÇIKARIMA DAYALI, DOĞRULAMA GEREKİYOR.\n"
+        "  Kullanıcının mesajından kriz işareti ÇIKARILDI ama kesin bir ifade\n"
+        "  eşleşmesi yok. Doğrudan kriz metnini basma; önce doğru anlayıp\n"
+        "  anlamadığını sor.\n"
+        "\n"
+        "  Cevabın şu üç parçadan oluşsun, kısa tut (en fazla 4 cümle):\n"
+        "  1. Kullanıcının söylediğini bir cümleyle, olduğu gibi yansıt.\n"
+        "  2. Ne anladığını açıkça ama yumuşak biçimde söyle. Örnek kalıp:\n"
+        "     'Bunu okurken aklıma şu geldi: kendine zarar verme düşüncesi\n"
+        "     olabilir mi, yoksa yanlış mı anladım?'\n"
+        "  3. Yanıtı ona bırak. Hangi cevabı verirse versin sorun olmadığını belirt.\n"
+        "\n"
+        "  KURALLAR:\n"
+        "  - Suçlayıcı ya da paniklemiş bir ton kullanma. Sakin ve sade ol.\n"
+        "  - Henüz 112 ya da acil servis yönlendirmesi YAPMA; bu bir kontrol sorusu.\n"
+        "  - Egzersiz verme, konu değiştirme, başka soru sorma.\n"
+        "  - Kullanıcıyı etiketleme: 'krizdesin', 'intihar eğilimin var' deme."
+    ) if getattr(safety, "needs_confirmation", False) and not safety.allow_cbt else (
         "BRANCH: allow_cbt = FALSE — SAFETY HARD STOP.\n"
         "  Yukarıdaki SAFETY CARD(S) altındaki SAFE_RESPONSE_TEMPLATE_TR temel olsun.\n"
         "  Kullanıcının anlattığına en fazla bir cümlelik kişiselleştirme ekle.\n"

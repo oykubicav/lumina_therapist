@@ -14,6 +14,7 @@ import { shouldPromptNow } from "@/lib/assessments";
 import AssessmentReminderBanner from "./AssessmentReminderBanner";
 import TransparencyPanel from "./TransparencyPanel";
 import SessionHandoff from "./SessionHandoff";
+import CrisisConfirm from "./CrisisConfirm";
 import { useAuth } from "@/hooks/useAuth";
 import { LogIn, LogOut, User } from "lucide-react";
 import { getName, getFocusLabels, markFocusUsed, clearProfile } from "@/lib/profile";
@@ -48,6 +49,7 @@ export default function ChatWindow() {
   );
   const [boundary, setBoundary] = useState("normal");
   const [handoffDismissed, setHandoffDismissed] = useState(false);
+  const [deniedTurns, setDeniedTurns] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [transparencyTurnId, setTransparencyTurnId] = useState<string | null>(null);
@@ -130,6 +132,34 @@ export default function ChatWindow() {
     setError(null);
     window.location.href = "/";
   };
+  // Kullanıcı kontrol sorusunu onayladı: tam kriz yanıtı istenir.
+  const confirmCrisis = async (turnId: string) => {
+    setDeniedTurns((prev) => new Set(prev).add(turnId));
+    setPending(true);
+    setError(null);
+    try {
+      const res = await postChat({
+        user_message: "Evet, öyle.",
+        session_id: sessionId || undefined,
+        crisis_confirmed: true,
+      });
+      setTurns((prev) => [
+        ...prev,
+        { user_message: "Evet, öyle.", chat: res, ts: Date.now() },
+      ]);
+    } catch (e: any) {
+      setError(e?.message || "Bir hata oluştu.");
+    } finally {
+      setPending(false);
+    }
+  };
+
+  // "Hayır" — kart kapanır, sohbet olağan biçimde sürer.
+  const denyCrisis = (turnId: string) => {
+    setDeniedTurns((prev) => new Set(prev).add(turnId));
+    textareaRef.current?.focus();
+  };
+
   const startFreshSession = async () => {
     clearSessionId();
     setSid("");
@@ -257,6 +287,14 @@ export default function ChatWindow() {
                 onFeedbackSent={handleFeedback}
                 showDebug={showDebug}
               />
+              {t.chat.safety?.needs_confirmation && !deniedTurns.has(t.chat.turn_id) && (
+                <div className="mt-3">
+                  <CrisisConfirm
+                    onConfirm={() => confirmCrisis(t.chat.turn_id)}
+                    onDeny={() => denyCrisis(t.chat.turn_id)}
+                  />
+                </div>
+              )}
               <div className="flex justify-start mt-1 pl-2">
                 <button
                   onClick={() => setTransparencyTurnId(t.chat.turn_id)}

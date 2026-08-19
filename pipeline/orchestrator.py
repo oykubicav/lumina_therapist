@@ -121,6 +121,7 @@ def respond(
     enable_llm_critic: bool = True,
     enable_intent: bool = True,
     max_rewrites: int = 1,
+    crisis_confirmed: bool = False,
 ) -> Turn:
     """End-to-end: safety -> intent -> retrieve -> compose -> critique
     (-> optional rewrite -> optional safety-template fallback).
@@ -139,6 +140,12 @@ def respond(
     t0 = time.time()
     safety = safety_classifier.classify(user_message, enable_layer3=True)
     t["safety_ms"] = (time.time() - t0) * 1000
+
+    # Kullanıcı kontrol sorusunu onayladı: artık çıkarım değil, beyan.
+    # Tam kriz yanıtına geç, yeniden tespit bekleme.
+    if crisis_confirmed:
+        safety = safety_classifier.escalate_from_intent(safety)
+        safety.needs_confirmation = False
 
 
 

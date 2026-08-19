@@ -12,12 +12,17 @@ class ChatRequest(BaseModel):
     user_message: constr(min_length=1, max_length=4000)
     session_id: Optional[str] = None
     options: ChatOptions = ChatOptions()
+    # Kullanıcı kontrol sorusuna "evet" dediğinde gönderilir; tam kriz
+    # yanıtına geçilir, yeniden tespit beklenmez.
+    crisis_confirmed: bool = False
 
 class SafetyView(BaseModel):
     route: str
     allow_cbt: bool
     highest_risk: str
     matched_card_ids: List[str]
+    # Cevap bir kontrol sorusuysa arayüz onay kartını gösterir.
+    needs_confirmation: bool = False
 
 class IntentView(BaseModel):
     module: str

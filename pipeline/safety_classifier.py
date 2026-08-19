@@ -168,6 +168,14 @@ def classify(user_message: str, enable_layer3: bool = True) -> SafetyDecision:
     allow_cbt = all(m.allow_cbt for m in matches)
     blocks_exercise = any(m.blocks_exercise for m in matches)
     highest_risk = _highest_risk(matches)
+
+    # Tüm sinyaller çıkarıma dayanıyorsa kriz metnini doğrudan basma; önce sor.
+    # Tek bir kesin ifade eşleşmesi varsa sormaya gerek yok.
+    all_signals = [s for m in matches for s in m.matched_signals]
+    needs_confirmation = bool(all_signals) and all(
+        s.split(":")[0] in _INFERRED_METHODS for s in all_signals
+    )
+
     return SafetyDecision(
         matches=matches,
         final_route=dominant.route,
@@ -175,6 +183,7 @@ def classify(user_message: str, enable_layer3: bool = True) -> SafetyDecision:
         blocks_exercise=blocks_exercise,
         highest_risk=highest_risk,
         safety_card_ids=[m.card_id for m in matches],
+        needs_confirmation=needs_confirmation,
     )
 
 
@@ -260,6 +269,12 @@ def _highest_risk(matches: List[SafetyMatch]) -> str:
     return max(matches, key=lambda m: _RISK_ORDER.get(m.risk_level, 0)).risk_level
 
 
+# Kesin ifade eşleşmesi olmayan, çıkarıma dayanan sinyal kaynakları.
+# Bunlardan gelen kararlarda kullanıcıya önce doğru anlaşılıp anlaşılmadığı
+# sorulur; kriz metni doğrudan basılmaz.
+_INFERRED_METHODS = {"embedding_verified", "intent_llm"}
+
+
 # Layer 4: LLM doğrulaması — embedding'den gelen her aday buradan geçer.
 
 _CRISIS_VERIFY_SYSTEM = (
@@ -329,6 +344,7 @@ def escalate_from_intent(existing: SafetyDecision) -> SafetyDecision:
         blocks_exercise=True,
         highest_risk="critical",
         safety_card_ids=card_ids,
+        needs_confirmation=True,
     )
 
 

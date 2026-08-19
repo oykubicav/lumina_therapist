@@ -28,6 +28,11 @@ class SafetyDecision:
     highest_risk: str            # max risk level among matches
     safety_card_ids: List[str]   # for retrieval inclusion (e.g. do_not_delay_care)
 
+    # Sinyal kesin bir ifade eşleşmesinden değil, çıkarımdan geldiyse True.
+    # Bu durumda kriz metni doğrudan basılmaz; önce kullanıcıya doğru anlaşılıp
+    # anlaşılmadığı sorulur.
+    needs_confirmation: bool = False
+
 
 @dataclass
 class IntentDecision:
