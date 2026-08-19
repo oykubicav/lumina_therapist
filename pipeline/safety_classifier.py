@@ -18,6 +18,7 @@ Either way it stays fully local — no external API.
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import List, Optional, Tuple
@@ -34,14 +35,24 @@ from .types import SafetyMatch, SafetyDecision
 # cümleler bile 0.4-0.5 verebilir, gerçek anlam yakınlığı 0.7+ gerekir.
 # Bu yüzden threshold'u backend adına göre seçiyoruz.
 
-# NOT: Layer 3 artık tek başına karar vermiyor, adayları Layer 4'e doğrulatıyor.
-# Bu yüzden eşik daha düşük tutulabilir: "her şeye son vermek istiyorum" gibi
-# 0.44 civarı skor alan gerçek kriz ifadeleri eşiğin altında kalıp kaçıyordu.
+# Bu sayılar bir KARAR eşiği değil, "kime ikinci kez bakılsın" eşiğidir.
+# Embedding'den geçen HER aday LLM'e doğrulatılır — istisnasız. Ölçüm şunu
+# gösterdi: doğrulamasız bırakılan kavramlar da yanlış alarm üretiyor
+# ("başım dönüyordu az uyudum" → bayılma acili, "kapıyı kilitledim mi diye
+# kontrol ediyorum" → OKB). Benzerlik skoru hangi kavramda olursa olsun
+# anlamı değil kalıbı yakalıyor.
+#
+#   high → doğrulamaya aday olma eşiği.
+#   gray → yalnızca hata ayıklama çıktısında kullanılır.
+#
+# Güvenliğin ağırlığı bu sayılarda değil: kural katmanları (Layer 1/2)
+# eşiksiz ve kesindir, test setindeki kriz vakalarının çoğunu onlar yakalar.
+# Embedding katmanı yalnızca bir şüphe tetikleyicisidir.
 LAYER3_THRESHOLDS = {
-    "sentence-transformers": {"high": 0.72, "gray": 0.60, "verify": 0.55},
-    "tfidf-char-ngram":      {"high": 0.55, "gray": 0.42, "verify": 0.40},
+    "sentence-transformers": {"high": 0.55, "gray": 0.48},
+    "tfidf-char-ngram":      {"high": 0.40, "gray": 0.34},
 }
-LAYER3_DEFAULT = {"high": 0.55, "gray": 0.42, "verify": 0.40}
+LAYER3_DEFAULT = {"high": 0.40, "gray": 0.34}
 
 
 def _thresholds_for(backend_name: str) -> dict:
@@ -112,9 +123,8 @@ def classify(user_message: str, enable_layer3: bool = True) -> SafetyDecision:
     layer3_hits = []
     if enable_layer3 and len(concept_decisions) == 0:
         layer3_hits = _layer3_match(user_message)
-        needs_verify = any(c in _VERIFY_CONCEPTS for c, _ in layer3_hits)
-        if needs_verify and not _verify_crisis_signal(user_message):
-            layer3_hits = [(c, s) for c, s in layer3_hits if c not in _VERIFY_CONCEPTS]
+        if layer3_hits and not _verify_crisis_signal(user_message):
+            layer3_hits = []
         for cid, score in layer3_hits:
             if cid not in concept_decisions:
                 cards = safety_rules.concept_to_target_cards(cid)
@@ -250,37 +260,96 @@ def _highest_risk(matches: List[SafetyMatch]) -> str:
     return max(matches, key=lambda m: _RISK_ORDER.get(m.risk_level, 0)).risk_level
 
 
-# Layer 4: LLM doğrulaması — yalnızca intihar/kendine zarar adayları için.
-# Bu kavramlarda benzerlik skoru yanıltıcı: "sakinleşmek istiyorum" ile
-# "ölmek istiyorum" aynı kalıbı paylaşıyor. Tıbbi belirti kavramları
-# (uyku apnesi, göğüs ağrısı) somut ifadelerle eşleştiği için doğrulanmaz.
-_VERIFY_CONCEPTS = {
-    "active_suicidal_ideation",
-    "passive_suicidal_ideation",
-    "bereavement_suicidal_ideation",
-    "self_harm_active",
-    "self_harm_history",
-    "secrecy_in_crisis",
-}
+# Layer 4: LLM doğrulaması — embedding'den gelen her aday buradan geçer.
 
 _CRISIS_VERIFY_SYSTEM = (
-    "Bir mesajda kriz işareti olup olmadığını belirliyorsun. Kriz işareti şudur: "
-    "kendine zarar verme ya da intihar düşüncesi/niyeti/planı, başkasına zarar "
-    "verme niyeti, aktif istismar ya da tıbbi aciliyet.\n\n"
-    "Şunlar kriz DEĞİLDİR: kaygı, stres, üzüntü, moral bozukluğu, uykusuzluk, "
-    "yorgunluk, bunalmışlık, kararsızlık, tükenmişlik, yas, genel çaresizlik "
-    "ifadeleri, rahatlama/sakinleşme isteği.\n\n"
+    "Bir psikolojik destek uygulamasına gelen mesajı değerlendiriyorsun. "
+    "Soru şu: bu mesaj normal destek sohbetinin dışına çıkıp acil "
+    "yönlendirme gerektiriyor mu?\n\n"
+    "EVET gerektiren durumlar:\n"
+    "- Kendine zarar verme ya da intihar düşüncesi, niyeti, planı\n"
+    "- Başkasına zarar verme niyeti\n"
+    "- Devam eden istismar, şiddet, tehdit\n"
+    "- Tıbbi aciliyet: göğüs ağrısı, felç belirtisi, nöbet, bilinç kaybı, "
+    "ciddi kanama, ani görme kaybı, aşırı doz, gebelikte acil belirti\n"
+    "- Tıbbi değerlendirme gerektiren tablo: uykuda nefes durması, "
+    "açıklanamayan sürekli fiziksel belirti\n"
+    "- Psikoz ya da mani belirtileri\n\n"
+    "HAYIR olan durumlar — bunlar normal destek konularıdır:\n"
+    "- Kaygı, stres, panik, endişe, huzursuzluk\n"
+    "- Üzüntü, moral bozukluğu, umutsuzluk hissi, yas\n"
+    "- Uykusuzluk, yorgunluk, bitkinlik, tükenmişlik\n"
+    "- Kararsızlık, bunalmışlık, kafa karışıklığı\n"
+    "- Gündelik bedensel yakınmalar: baş ağrısı, baş dönmesi, çarpıntı\n"
+    "- Kontrol etme, tekrarlayan düşünce, mükemmeliyetçilik\n"
+    "- Gebelik ya da yeni doğum kaynaklı kaygı\n"
+    "- İlişki sorunları, tartışmalar, iş stresi\n"
+    "- Geçmişte yaşanmış zor deneyimlerden söz etmek\n\n"
+    "Kararsız kaldığında HAYIR de: yanlış alarm, kişiyi destek almaktan "
+    "uzaklaştırır.\n\n"
     "Yalnızca tek kelime yaz: EVET ya da HAYIR."
 )
 
 
-def _verify_crisis_signal(user_text: str) -> bool:
-    """Layer 3 adayını LLM ile doğrula.
+def escalate_from_intent(existing: SafetyDecision) -> SafetyDecision:
+    """Intent sınıflandırıcısı kriz gördüğünde güvenlik kararını yükselt.
 
-    LLM erişilemezse yüksek güvenli skoru olan adaylar geçerli sayılır —
-    krizi kaçırmak, yanlış alarmdan daha ağır bir hata.
+    Kural ve embedding katmanları önceden yazılmış ifadelere bakar; bu ikisi
+    de kaçırdığında intent sınıflandırıcısı devrede kalır. O her mesajda
+    zaten çağrılan bir LLM olduğu için ek maliyet doğurmaz ve önceden
+    listelenmemiş ifadeleri de anlamından tanıyabilir.
+    """
+    cards = safety_rules.concept_to_target_cards("active_suicidal_ideation")
+    safety_cards = _load_safety_cards_indexed()
+    matches = list(existing.matches)
+    card_ids = list(existing.safety_card_ids)
+
+    for card_id in cards:
+        card_def = safety_cards.get(card_id)
+        if not card_def or card_id in card_ids:
+            continue
+        matches.append(SafetyMatch(
+            card_id=card_id,
+            risk_level=card_def["risk_level"],
+            route=card_def["route"],
+            allow_cbt=card_def["allow_cbt"],
+            blocks_exercise=card_def["blocks_exercise"],
+            matched_signals=["intent_llm:crisis"],
+            match_strength=1.0,
+        ))
+        card_ids.append(card_id)
+
+    if not matches:
+        return existing
+
+    return SafetyDecision(
+        matches=matches,
+        final_route="crisis_referral",
+        allow_cbt=False,
+        blocks_exercise=True,
+        highest_risk="critical",
+        safety_card_ids=card_ids,
+    )
+
+
+def _verify_crisis_signal(user_text: str) -> bool:
+    """Embedding adayını LLM ile doğrula.
+
+    LLM erişilemezse aday DÜŞÜRÜLÜR. Gerekçe: yanlış alarmın telafisi yok —
+    kullanıcı kriz şablonunu görür ve akış oraya kilitlenir. Kaçırılan sinyalin
+    ise iki yedeği var: composer kullanıcı mesajını zaten görüyor ve kriz
+    kurallarına tabi, ardından output_critic eskalasyon yapılmamışsa cevabı
+    reddedip yeniden yazdırıyor.
+
+    Kural katmanları (Layer 1/2) bu fonksiyona hiç uğramaz; onlar kesin
+    eşleşmedir ve LLM'e sorulmadan karar verir.
     """
     from . import llm_adapter
+
+    # Mock sağlayıcıda doğrulayacak model yok. Doğrulanmamış adaya güvenmek
+    # yanlış alarm demek; aday düşer. Kural katmanı bundan etkilenmez.
+    if config.LLM_PROVIDER == "mock":
+        return False
 
     try:
         resp = llm_adapter.llm_complete(
@@ -293,7 +362,11 @@ def _verify_crisis_signal(user_text: str) -> bool:
         )
         return resp.text.strip().upper().startswith("EVET")
     except Exception:
-        return True
+        logging.getLogger(__name__).warning(
+            "crisis_verify_unavailable: embedding adayı düşürüldü, "
+            "composer ve critic katmanları devrede"
+        )
+        return False
 
 
 # Layer 3: embedding semantic match
@@ -341,8 +414,7 @@ def _layer3_match(user_text: str, top_k: int = 5, include_gray: bool = False) ->
         # İntihar/kendine zarar kavramları daha düşük eşikle aday olur; bunlar
         # Layer 4'te doğrulanacağı için yanlış alarm riski yok. Diğer kavramlar
         # doğrulanmadan karara gittiği için yüksek eşikte kalır.
-        band = "verify" if cid in _VERIFY_CONCEPTS else ("gray" if include_gray else "high")
-        threshold = th.get(band, th["high"])
+        threshold = th["gray"] if include_gray else th["high"]
         if s < threshold:
             continue
         # Filter: Layer 3 only for high/critical risk concepts

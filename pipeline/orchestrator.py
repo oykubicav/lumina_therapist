@@ -29,6 +29,10 @@ from . import output_critic
 from .types import SafetyDecision, RetrievedCard, IntentDecision
 from .composer import _BOUNDARY_HARD, _BOUNDARY_CLOSING_START
 
+# Intent sınıflandırıcısı kriz dediğinde güvenlik rotasına geçmek için gereken
+# asgari güven. Düşük güvenli tahminler yanlış alarma yol açmasın diye eşik var.
+_INTENT_ESCALATION_CONFIDENCE = 0.7
+
 
 
 # Safety-template fallback loader
@@ -142,6 +146,17 @@ def respond(
     t0 = time.time()
     intent = intent_classifier.classify(user_message, safety, enable_llm=enable_intent)
     t["intent_ms"] = (time.time() - t0) * 1000
+
+    # Kural ve embedding katmanları önceden yazılmış ifadelere bakıyor. İkisi de
+    # kaçırdığında son kontrol burada: intent sınıflandırıcısı zaten her mesajda
+    # çağrılan bir LLM ve kriz tanımı prompt'unda yazılı.
+    if (
+        safety.allow_cbt
+        and intent.primary_module == "safety"
+        and intent.confidence >= _INTENT_ESCALATION_CONFIDENCE
+    ):
+        safety = safety_classifier.escalate_from_intent(safety)
+
     module_filter = intent_classifier.module_filter_from_intent(intent) if safety.allow_cbt else None
 
     # 3. Retrieve (safety hard-stop honored inside retriever; module bias
