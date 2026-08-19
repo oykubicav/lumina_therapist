@@ -34,11 +34,14 @@ from .types import SafetyMatch, SafetyDecision
 # cümleler bile 0.4-0.5 verebilir, gerçek anlam yakınlığı 0.7+ gerekir.
 # Bu yüzden threshold'u backend adına göre seçiyoruz.
 
+# NOT: Layer 3 artık tek başına karar vermiyor, adayları Layer 4'e doğrulatıyor.
+# Bu yüzden eşik daha düşük tutulabilir: "her şeye son vermek istiyorum" gibi
+# 0.44 civarı skor alan gerçek kriz ifadeleri eşiğin altında kalıp kaçıyordu.
 LAYER3_THRESHOLDS = {
-    "sentence-transformers": {"high": 0.72, "gray": 0.60},
-    "tfidf-char-ngram":      {"high": 0.55, "gray": 0.42},
+    "sentence-transformers": {"high": 0.72, "gray": 0.60, "verify": 0.55},
+    "tfidf-char-ngram":      {"high": 0.55, "gray": 0.42, "verify": 0.40},
 }
-LAYER3_DEFAULT = {"high": 0.55, "gray": 0.42}
+LAYER3_DEFAULT = {"high": 0.55, "gray": 0.42, "verify": 0.40}
 
 
 def _thresholds_for(backend_name: str) -> dict:
@@ -103,14 +106,20 @@ def classify(user_message: str, enable_layer3: bool = True) -> SafetyDecision:
             concept_decisions[c.concept_id] = (c.risk_level, c.target_card_ids, "concept_rule", c.confidence)
 
     # ---------- Layer 3: embedding fallback ----------
+    # Benzerlik skoru yüzeysel: "sakinleşmek istiyorum" ile "ölmek istiyorum"
+    # aynı kalıbı paylaştığı için yüksek skor alabiliyor. Bu yüzden Layer 3
+    # tek başına kriz kararı vermez; adayı Layer 4'e doğrulatır.
     layer3_hits = []
     if enable_layer3 and len(concept_decisions) == 0:
         layer3_hits = _layer3_match(user_message)
+        needs_verify = any(c in _VERIFY_CONCEPTS for c, _ in layer3_hits)
+        if needs_verify and not _verify_crisis_signal(user_message):
+            layer3_hits = [(c, s) for c, s in layer3_hits if c not in _VERIFY_CONCEPTS]
         for cid, score in layer3_hits:
             if cid not in concept_decisions:
                 cards = safety_rules.concept_to_target_cards(cid)
                 risk = safety_rules.concept_to_risk_level(cid)
-                concept_decisions[cid] = (risk, cards, "embedding_fallback", round(score, 3))
+                concept_decisions[cid] = (risk, cards, "embedding_verified", round(score, 3))
 
     # ---------- Aggregate into SafetyMatch list ----------
     safety_cards = _load_safety_cards_indexed()
@@ -241,6 +250,52 @@ def _highest_risk(matches: List[SafetyMatch]) -> str:
     return max(matches, key=lambda m: _RISK_ORDER.get(m.risk_level, 0)).risk_level
 
 
+# Layer 4: LLM doğrulaması — yalnızca intihar/kendine zarar adayları için.
+# Bu kavramlarda benzerlik skoru yanıltıcı: "sakinleşmek istiyorum" ile
+# "ölmek istiyorum" aynı kalıbı paylaşıyor. Tıbbi belirti kavramları
+# (uyku apnesi, göğüs ağrısı) somut ifadelerle eşleştiği için doğrulanmaz.
+_VERIFY_CONCEPTS = {
+    "active_suicidal_ideation",
+    "passive_suicidal_ideation",
+    "bereavement_suicidal_ideation",
+    "self_harm_active",
+    "self_harm_history",
+    "secrecy_in_crisis",
+}
+
+_CRISIS_VERIFY_SYSTEM = (
+    "Bir mesajda kriz işareti olup olmadığını belirliyorsun. Kriz işareti şudur: "
+    "kendine zarar verme ya da intihar düşüncesi/niyeti/planı, başkasına zarar "
+    "verme niyeti, aktif istismar ya da tıbbi aciliyet.\n\n"
+    "Şunlar kriz DEĞİLDİR: kaygı, stres, üzüntü, moral bozukluğu, uykusuzluk, "
+    "yorgunluk, bunalmışlık, kararsızlık, tükenmişlik, yas, genel çaresizlik "
+    "ifadeleri, rahatlama/sakinleşme isteği.\n\n"
+    "Yalnızca tek kelime yaz: EVET ya da HAYIR."
+)
+
+
+def _verify_crisis_signal(user_text: str) -> bool:
+    """Layer 3 adayını LLM ile doğrula.
+
+    LLM erişilemezse yüksek güvenli skoru olan adaylar geçerli sayılır —
+    krizi kaçırmak, yanlış alarmdan daha ağır bir hata.
+    """
+    from . import llm_adapter
+
+    try:
+        resp = llm_adapter.llm_complete(
+            system=_CRISIS_VERIFY_SYSTEM,
+            user=user_text,
+            model=config.LLM_MODEL_INTENT,
+            max_tokens=5,
+            temperature=0.0,
+            redact=True,
+        )
+        return resp.text.strip().upper().startswith("EVET")
+    except Exception:
+        return True
+
+
 # Layer 3: embedding semantic match
 
 def _layer3_match(user_text: str, top_k: int = 5, include_gray: bool = False) -> List[Tuple[str, float]]:
@@ -281,9 +336,13 @@ def _layer3_match(user_text: str, top_k: int = 5, include_gray: bool = False) ->
         if cid not in best or s > best[cid]:
             best[cid] = s
     th = _thresholds_for(backend.name)
-    threshold = th["gray"] if include_gray else th["high"]
     ranked = []
     for cid, s in best.items():
+        # İntihar/kendine zarar kavramları daha düşük eşikle aday olur; bunlar
+        # Layer 4'te doğrulanacağı için yanlış alarm riski yok. Diğer kavramlar
+        # doğrulanmadan karara gittiği için yüksek eşikte kalır.
+        band = "verify" if cid in _VERIFY_CONCEPTS else ("gray" if include_gray else "high")
+        threshold = th.get(band, th["high"])
         if s < threshold:
             continue
         # Filter: Layer 3 only for high/critical risk concepts
