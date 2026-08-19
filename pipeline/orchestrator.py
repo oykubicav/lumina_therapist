@@ -110,6 +110,30 @@ class Turn:
 
 # Public API
 
+_MIN_QUERY_CHARS = 25
+_MIN_QUERY_WORDS = 4
+
+
+def _retrieval_query(user_message: str, history: Optional[List[dict]]) -> str:
+    """Kart araması için kullanılacak metni seç.
+
+    "tamam", "evet", "hayır öyle değil" gibi kısa yanıtlar tek başına arandığında
+    alakasız kart getiriyor — "hayır" sözcüğü sınır koyma kartlarıyla eşleşiyor
+    örneğin. Bu durumda konuşmadaki son anlamlı kullanıcı mesajı kullanılır;
+    konu orada tanımlanmıştır.
+    """
+    text = user_message.strip()
+    if len(text) >= _MIN_QUERY_CHARS or len(text.split()) >= _MIN_QUERY_WORDS:
+        return user_message
+
+    for turn in reversed(history or []):
+        previous = (turn.get("user_message") or "").strip()
+        if len(previous) >= _MIN_QUERY_CHARS or len(previous.split()) >= _MIN_QUERY_WORDS:
+            return previous
+
+    return user_message
+
+
 def respond(
     user_message: str,
     *,
@@ -170,7 +194,7 @@ def respond(
     # when intent classifier is confident)
     t0 = time.time()
     retrieved = retriever.hybrid_retrieve(
-        user_message,
+        _retrieval_query(user_message, history),
         top_k=top_k,
         safety_card_ids=safety.safety_card_ids or None,
         allow_cbt=safety.allow_cbt,
