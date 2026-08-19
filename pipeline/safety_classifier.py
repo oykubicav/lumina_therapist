@@ -411,9 +411,9 @@ def _layer3_match(user_text: str, top_k: int = 5, include_gray: bool = False) ->
     th = _thresholds_for(backend.name)
     ranked = []
     for cid, s in best.items():
-        # İntihar/kendine zarar kavramları daha düşük eşikle aday olur; bunlar
-        # Layer 4'te doğrulanacağı için yanlış alarm riski yok. Diğer kavramlar
-        # doğrulanmadan karara gittiği için yüksek eşikte kalır.
+        # Tek eşik, kavram ayrımı yok: buradan geçen her aday Layer 4'te
+        # doğrulanır. Eşiğin altında kalanlar için intent sınıflandırıcısı
+        # son kontrol olarak devrede.
         threshold = th["gray"] if include_gray else th["high"]
         if s < threshold:
             continue
