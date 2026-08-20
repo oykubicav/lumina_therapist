@@ -73,7 +73,7 @@ TEMEL KURAL — MUHAFAZAKAR ÇIKARIM:
    Konuşmada değinilen modüller. Sadece bunlar:
    health_anxiety, panic, gad, depression, low_self_esteem, insomnia,
    work_stress, relationship_stress, grief_loss, life_transitions, trauma_awareness,
-   social_anxiety
+   social_anxiety, procrastination, anger, exam_anxiety, body_image, chronic_pain, financial_stress
 
 5. progress_note (str, opsiyonel):
    Bir cümlelik klinik-tarzı ilerleme notu. SADECE somut bir ilerleme/gerileme fark ettiysen.
@@ -164,7 +164,7 @@ def extract_profile_patch(
     allowed_modules = {
         "health_anxiety", "panic", "gad", "depression", "low_self_esteem",
         "insomnia", "work_stress", "relationship_stress", "grief_loss",
-        "life_transitions", "trauma_awareness", "social_anxiety",
+        "life_transitions", "trauma_awareness", "social_anxiety", "procrastination", "anger", "exam_anxiety", "body_image", "chronic_pain", "financial_stress",
     }
     modules = [m for m in _clean_list(data.get("add_modules", []), max_len=5)
                if m in allowed_modules]

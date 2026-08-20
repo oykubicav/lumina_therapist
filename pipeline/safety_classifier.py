@@ -249,6 +249,7 @@ _ROUTE_PRIORITY = [
     "medical_professional_referral",
     "abuse_safety_referral",
     "minor_referral",
+    "professional_referral_supportive",
     "scope_boundary",
     "conditional_cbt_after_safety_check",
 ]

@@ -27,9 +27,15 @@ TOPIC_DISPLAY_TR = {
     "life_transitions": "Yaşam Geçişleri",
     "trauma_awareness": "Travma Farkındalığı",
     "social_anxiety": "Sosyal Kaygı",
+    "procrastination": "Erteleme",
+    "anger": "Öfke",
+    "exam_anxiety": "Sınav kaygısı",
+    "body_image": "Beden imajı",
+    "chronic_pain": "Kronik ağrı",
+    "financial_stress": "Maddi kaygı",
 }
 
-TOPICS_ORDER = ["health_anxiety", "panic", "gad", "depression", "low_self_esteem", "insomnia", "work_stress", "relationship_stress", "grief_loss", "life_transitions", "trauma_awareness", "social_anxiety"]
+TOPICS_ORDER = ["health_anxiety", "panic", "gad", "depression", "low_self_esteem", "insomnia", "work_stress", "relationship_stress", "grief_loss", "life_transitions", "trauma_awareness", "social_anxiety", "procrastination", "anger", "exam_anxiety", "body_image", "chronic_pain", "financial_stress"]
 
 
 def filter_cbt_cards(

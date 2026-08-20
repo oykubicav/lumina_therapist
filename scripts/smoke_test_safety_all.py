@@ -53,6 +53,14 @@ for tid, exp, got, ok in results:
         mod = "life_transitions"
     elif tid.startswith("resp_trauma"):
         mod = "trauma_awareness"
+    elif tid.startswith("resp_fin"):
+        mod = "financial_stress"
+    elif tid.startswith("resp_pain"):
+        mod = "chronic_pain"
+    elif tid.startswith("resp_body"):
+        mod = "body_image"
+    elif tid.startswith("resp_exam"):
+        mod = "exam_anxiety"
     elif tid.startswith("resp_regression"):
         mod = "regression"
     elif tid.startswith("resp_safety"):

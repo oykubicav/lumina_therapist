@@ -46,6 +46,12 @@ MODULES = [
     "life_transitions",
     "trauma_awareness",
     "social_anxiety",
+    "procrastination",
+    "anger",
+    "exam_anxiety",
+    "body_image",
+    "chronic_pain",
+    "financial_stress",
     "safety",
     "boundary",
     "unknown",
@@ -78,6 +84,12 @@ MODÜLLER:
 - relationship_stress: ilişki stresi, iletişim güçlüğü, kavga örüntüleri, kaygılı/kaçıngan bağlanma, sınır koyma, ayrılık yası, aile-partner çatışması, kayınvalide-kayınbaba dinamiği. NOT: fiziksel şiddet / tehdit / kontrolcü davranış / cinsel zorlama = safety. Sadece 'anlaşamıyoruz, çok tartışıyoruz' = relationship_stress.
 - grief_loss: yakın kaybı (ölüm), ölüm sonrası yas, yas ritüelleri, cenaze/taziye sonrası, uzamış yas belirtileri, evcil hayvan kaybı, disenfranchised grief. NOT: 'onun yanına gitmek istiyorum' = safety (bereavement suicidal ideation). Yakın intihar sonrası yas = grief_loss (safety cross-referansı kart 9'da).
 - life_transitions: yaşam geçişleri — mezuniyet, taşınma, yeni iş, evlilik, boşanma, ebeveynlik, empty nest, emeklilik, göç (gurbet), askerlik. Bridges 3 faz + Schlossberg 4S çerçevesi. NOT: Geçişin altında ciddi depresyon / intihar / postpartum kriz = safety.
+- anger: öfke, sinirlenme, parlama, bağırma, tahammülsüzlük, trafikte/işte/evde öfke patlamaları, sonrasında pişmanlık, öfkeyi içine atma, küsme. Novaco çerçevesi: tetikleyici, yorum, bedensel uyarılma, dürtü, davranış. NOT: kullanıcı BAŞKASINA fiziksel zarar verdiğini ya da vereceğinden korktuğunu söylüyorsa = safety. Kullanıcı şiddete MARUZ kalıyorsa = safety. İlişki içi tekrarlayan çatışma örüntüsü baskınsa relationship_stress.
+- exam_anxiety: sınav kaygısı — YKS, KPSS, TUS, ALES, final, vize, ehliyet sınavı; sınav öncesi uyuyamama, sınavda donma/blackout, bildiğini hatırlayamama, deneme çözememe, sonuç bekleme gerginliği, aile ve çevrenin sınav baskısı, puanın kimlikle birleşmesi. Liebert-Morris çerçevesi: endişe (bilişsel) ve bedensel uyarılma ayrımı. NOT: kaygı sınavdan bağımsız, yaygın ve çok konuya yayılıyorsa gad. Asıl korku başkalarının değerlendirmesi/rezil olmaksa (sunum, sözlü, topluluk önünde) social_anxiety. Sorun sınav kaygısı değil ders çalışmaya başlayamamaksa procrastination. Odak "ben yetersizim" temel inancındaysa low_self_esteem. İş yerindeki performans değerlendirmesi work_stress.
+- body_image: beden imajı — bedeninden memnun olmama, aynada kendini beğenmeme, kilo aldım/aldığımı düşünüyorum, sürekli tartılma, beden kontrol davranışları, fotoğrafta kendini görünce kötü hissetme, sosyal medyada görünüm karşılaştırması, "zayıf olsam her şey düzelirdi" varsayımı, duyguyla yeme, katı yeme kuralları ve sonrasındaki suçluluk, bedeni dışarıdan izleme. Cash beden imajı BDT çerçevesi. NOT: kullanıcı çıkarma (kusma, laksatif, müshil), günlerce aç kalma ya da yediğini telafi için aşırı egzersiz bildiriyorsa = safety. Yeme bozukluğu tanısı beyan ediyor ya da tıkınma nöbeti anlatıyorsa = safety. Diyet listesi, kalori hedefi ya da kilo verme tavsiyesi istiyorsa = safety. Odak görünüm değil genel "ben değersizim" inancındaysa low_self_esteem. Başkalarının bakışından çekinme sosyal ortamlara girememeye yol açıyorsa social_anxiety.
+- chronic_pain: tanısı konmuş ya da aylardır süren ağrı ve uzun süreli hastalıkla YAŞAMAK — fibromiyalji, bel fıtığı, migren, romatoid artrit, endometriozis, nöropati vb. Hareket etmekten korkma ve kaçınma, iyi günde aşırı yapıp sonra çökme, tempolama, alevlenme günleri, ağrı-uyku döngüsü, ağrı yüzünden bırakılan işler ve ilişkiler, "iyi görünüyorsun" denmesi, ağrının psikolojikleştirilmesi. Vlaeyen-Linton korku-kaçınma modeli. ÇOK ÖNEMLİ AYRIM: health_anxiety, HASTA OLMA KORKUSUDUR — belirti yorumlama, doktor doktor gezme, güvence arama, tetkik isteme, "kanser miyim". chronic_pain ise ZATEN VAR OLAN ağrı ya da hastalıkla yaşamaktır. Kullanıcı sağlıklı ama hastalanmaktan korkuyorsa health_anxiety; ağrısı/hastalığı var ve onunla baş etmeye çalışıyorsa chronic_pain. NOT: kırmızı bayrak bildirimi (idrar/dışkı tutamama, eyer bölgesi uyuşması, ağrıyla birlikte ateş ya da açıklanamayan kilo kaybı, gece uyandıran ağrı, ilerleyen güç kaybı) = safety. Ağrı kesici dozu ya da ilaç sorusu = safety. Ağrı ikincil, baskın olan çökkünlük ve keyif alamamaysa depression. Sorun ağrı değil sadece uykusuzluksa insomnia.
+- financial_stress: maddi sıkıntı ve para kaygısı — kira, fatura, kredi kartı borcu, taksit, icra, enflasyon, ay sonunu getirememek, işten çıkarılma korkusu, gece yatakta hesap yapma, faturayı açmaktan kaçınma, para yüzünden utanç ve gizleme, evde para tartışmaları, geleceği planlayamama. Kıtlık ve zihinsel bant genişliği çerçevesi. NOT: kumar/bahis nedeniyle kayıp ya da borç = safety. Alacaklı tehdidi, tefeci = safety. Kredi, yatırım, döviz, bütçe planı gibi finansal karar sorusu = safety. Borç bağlamında umutsuzluk ve yaşama isteği kaybı = safety. Odak iş yükü, patron, mobbing ya da tükenmişlikse work_stress; işini kaybetme kaygısı maddi boyuttan çok kimlik/anlam üzerineyse life_transitions. Endişe paradan bağımsız, birçok konuya yayılıyorsa gad. Baskın olan çökkünlük ve keyif alamamaysa depression.
+- procrastination: erteleme, başlayamama, sürekli sonraya bırakma, son dakikaya kalma, dikkat dağınıklığı ile iş yapamama, mükemmeliyetçilik yüzünden işe girişememe, ödev/rapor/başvuru geciktirme. Duygu düzenleme çerçevesi: görev aversif his uyandırıyor, kaçınma kısa vadeli rahatlama sağlıyor, suçluluk döngüyü besliyor. NOT: iş yükü ve tükenmişlik baskınsa work_stress. İsteksizlik, keyif alamama, yorgunluk baskınsa depression. Sadece odaklanamama değil genel kaygı baskınsa gad.
 - social_anxiety: başkalarının değerlendirmesinden korkma — topluluk önünde konuşma, sunum, kalabalığa girme, tanımadığıyla sohbet, telefon açamama, izlenirken yemek/yazma, göz teması zorluğu, kızarma/ses titremesi kaygısı, sosyal ortamlardan kaçınma, olay sonrası kendini tekrar tekrar eleştirme. Clark & Wells modeli: kendine odaklı dikkat, güvenlik davranışları, olay öncesi/sonrası işleme. NOT: sosyal ortam değil genel/yaygın endişe ise gad. Kendine dair olumsuz çekirdek inanç baskınsa low_self_esteem. Beklenmedik panik atakları baskınsa panic.
 - trauma_awareness: travma tanıma (tedavi değil) — PTSD/C-PTSD belirtileri, flashback, kabus, dissociation, tetikleyici, grounding, deprem/afet, cinsel saldırı sonrası (geçmiş), çocukluk istismarı yetişkin, vicarious trauma (sağlıkçı, gazeteci). NOT: AKTİF şiddet/istismar = safety (relationship_stress rota). Travma + intihar düşüncesi = safety.
 - safety: kriz (intihar, kendine zarar), tıbbi acil (göğüs ağrısı, felç), istismar (aile içi, iş yerinde, partner/eş), küçük yaş, psikoz/mani, uyku apnesi/narkolepsi şüphesi, iş yerinde cinsel taciz/fiziksel şiddet/sistematik mobbing, IPV (partner şiddeti, tehdit, kontrol, cinsel zorlama).
@@ -169,6 +181,60 @@ Mesaj: "Toplantıda konuşurken sesim titriyor, herkes beni yargılıyor sanıyo
 
 Mesaj: "Telefonla kimseyi arayamıyorum, kafede sipariş vermek bile bana zor geliyor."
 {"primary_module":"social_anxiety","secondary_modules":[],"subintent":"exercise_request","confidence":0.9,"rationale":"sosyal etkileşim kaçınması"}
+
+Mesaj: "Tezimi iki aydır açmadım bile, her gün bugün başlarım diyorum ama olmuyor."
+{"primary_module":"procrastination","secondary_modules":[],"subintent":"ambiguous_symptom","confidence":0.92,"rationale":"kronik erteleme + niyet-eylem boşluğu"}
+
+Mesaj: "Mükemmel olmayacaksa hiç başlamıyorum, sonra da son güne kalıyor."
+{"primary_module":"procrastination","secondary_modules":["low_self_esteem"],"subintent":"exercise_request","confidence":0.88,"rationale":"mükemmeliyetçilik kaynaklı erteleme"}
+
+Mesaj: "Çok çabuk parlıyorum, bağırıyorum sonra çok pişman oluyorum."
+{"primary_module":"anger","secondary_modules":[],"subintent":"exercise_request","confidence":0.92,"rationale":"öfke patlaması + sonrasında pişmanlık"}
+
+Mesaj: "Dün eşime vurdum, kendimi tutamadım."
+{"primary_module":"safety","secondary_modules":["anger"],"subintent":"crisis","confidence":0.97,"rationale":"başkasına fiziksel zarar bildirimi — safety önceliği"}
+
+Mesaj: "Kira zammı geldi, gece yatakta hesap yapmaktan uyuyamıyorum."
+{"primary_module":"financial_stress","secondary_modules":["insomnia"],"subintent":"exercise_request","confidence":0.93,"rationale":"maddi kaygı + gece ruminasyonu"}
+
+Mesaj: "Faturaları açmaya korkuyorum, bir kenarda duruyorlar."
+{"primary_module":"financial_stress","secondary_modules":[],"subintent":"psychoeducation","confidence":0.91,"rationale":"maddi kaçınma davranışı"}
+
+Mesaj: "Bahis yüzünden borca girdim, eşime söyleyemiyorum."
+{"primary_module":"safety","secondary_modules":["financial_stress"],"subintent":"crisis","confidence":0.95,"rationale":"kumar kaynaklı zarar — safety önceliği"}
+
+Mesaj: "Hangi borcumu önce kapatmalıyım, kredi mi çeksem?"
+{"primary_module":"safety","secondary_modules":["financial_stress"],"subintent":"boundary_request","confidence":0.93,"rationale":"finansal karar tavsiyesi kapsam dışı"}
+
+Mesaj: "Üç yıldır fibromiyalji tanım var, iyi bir gün olunca her şeyi yapıyorum sonra üç gün kalkamıyorum."
+{"primary_module":"chronic_pain","secondary_modules":[],"subintent":"exercise_request","confidence":0.94,"rationale":"tanılı kronik ağrı + aşırı sürdürme-çökme örüntüsü"}
+
+Mesaj: "Bel fıtığım var, hareket edersem daha çok zarar veririm diye hiçbir şey yapmıyorum."
+{"primary_module":"chronic_pain","secondary_modules":[],"subintent":"psychoeducation","confidence":0.92,"rationale":"korku-kaçınma örüntüsü"}
+
+Mesaj: "Başım ağrıyor, tümör olabilir mi diye üç doktora gittim, hepsi bir şey yok dedi ama içim rahat etmiyor."
+{"primary_module":"health_anxiety","secondary_modules":[],"subintent":"ambiguous_symptom","confidence":0.93,"rationale":"hastalanma korkusu + güvence arama — kronik ağrı değil"}
+
+Mesaj: "Bel ağrım var ve birkaç gündür idrarımı tutamıyorum."
+{"primary_module":"safety","secondary_modules":["chronic_pain"],"subintent":"crisis","confidence":0.97,"rationale":"omurilik sıkışması işareti — acil, safety önceliği"}
+
+Mesaj: "Aynada kendime bakınca berbat hissediyorum, günde birkaç kez tartılıyorum."
+{"primary_module":"body_image","secondary_modules":[],"subintent":"exercise_request","confidence":0.92,"rationale":"beden memnuniyetsizliği + kontrol davranışı"}
+
+Mesaj: "Sosyal medyada herkesin bedeni benimkinden iyi görünüyor, kendimi kötü hissediyorum."
+{"primary_module":"body_image","secondary_modules":["low_self_esteem"],"subintent":"ambiguous_symptom","confidence":0.89,"rationale":"görünüm karşılaştırması"}
+
+Mesaj: "Yedikten sonra kusuyorum, kimseye söyleyemedim."
+{"primary_module":"safety","secondary_modules":["body_image"],"subintent":"crisis","confidence":0.96,"rationale":"çıkarma davranışı — tıbbi risk, safety önceliği"}
+
+Mesaj: "Bana zayıflamak için bir diyet listesi yazar mısın?"
+{"primary_module":"safety","secondary_modules":["body_image"],"subintent":"boundary_request","confidence":0.94,"rationale":"beslenme/kilo tavsiyesi kapsam dışı"}
+
+Mesaj: "YKS'ye iki ay kaldı, denemelerde donuyorum, bildiğim soruyu bile yapamıyorum."
+{"primary_module":"exam_anxiety","secondary_modules":[],"subintent":"exercise_request","confidence":0.93,"rationale":"sınav performansında donma — sınav kaygısı"}
+
+Mesaj: "Sonuç açıklanacak diye günlerdir uyuyamıyorum, ailem ne der diye düşünüyorum."
+{"primary_module":"exam_anxiety","secondary_modules":["insomnia"],"subintent":"ambiguous_symptom","confidence":0.88,"rationale":"sınav sonucu beklentisi + aile baskısı"}
 
 Mesaj: "Deprem sonrası her sallantıda panikliyorum, iyi kişileri düşünemiyorum."
 {"primary_module":"trauma_awareness","secondary_modules":["panic"],"subintent":"ambiguous_symptom","confidence":0.9,"rationale":"deprem travma tepkileri — panic cross olabilir"}"""

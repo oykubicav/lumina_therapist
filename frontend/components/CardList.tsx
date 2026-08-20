@@ -36,6 +36,18 @@ const TOPIC_DESCRIPTIONS: Record<string, string> = {
     "Zor yaşantıların etkilerini tanımak ve destek seçeneklerini bilmek üzerine.",
   social_anxiety:
     "Başkalarının değerlendirmesinden çekinme, sosyal ortamlarda gerginlik ve kaçınma üzerine.",
+  procrastination:
+    "Başlayamama, sürekli sonraya bırakma ve bunun getirdiği suçluluk döngüsü üzerine.",
+  anger:
+    "Çabuk parlama, öfkeyi ifade etme biçimleri ve sonrasındaki onarım üzerine.",
+  exam_anxiety:
+    "Sınav öncesi gerginlik, sınavda donma ve sonuç beklerken yaşananlar üzerine.",
+  body_image:
+    "Bedeninle kurduğun ilişki, karşılaştırma alışkanlığı ve görünüm üzerinden kendini değerlendirme üzerine.",
+  chronic_pain:
+    "Uzun süren ağrı ya da hastalıkla yaşamak: hareket, tempo, alevlenme günleri ve çevreyle ilişki üzerine.",
+  financial_stress:
+    "Para kaygısının uykuya, karar vermeye, ilişkilere ve kendine bakışına yansıması üzerine.",
 };
 
 export default function CardList() {

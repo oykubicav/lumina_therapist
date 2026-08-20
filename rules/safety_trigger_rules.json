@@ -230,32 +230,53 @@
     },
     "mood_active_suicide": {
       "terms": [
-        "ölmek istiyorum",
+        "buna bir son vermek istiyorum",
+        "buna son vermeyi düşünüyorum",
+        "canıma kıymak istiyorum",
+        "canıma kıymayı düşünüyorum",
+        "hayatıma son vermek istiyorum",
+        "hayatıma son vermeyi düşünüyorum",
+        "hayatımı sonlandırmak istiyorum",
+        "her şeye son vermek istiyorum",
+        "her şeye son vermeyi düşünüyorum",
+        "her şeyi bitirmek istiyorum",
+        "her şeyi bitirmeyi düşünüyorum",
+        "intihar edeceğim",
         "intihar etmek istiyorum",
-        "kendimi öldürmek istiyorum",
-        "kendimi öldürmeyi düşünüyorum",
-        "yaşamımı sonlandırmak",
-        "yaşamıma son",
-        "veda etmek istiyorum",
         "intihar etmeyi düşünüyorum",
         "intihar etmeyi planlıyorum",
-        "intihar edeceğim",
-        "kendimi öldürmeyi planlıyorum",
         "kendime kıymak istiyorum",
-        "canıma kıymak istiyorum",
-        "hayatıma son vermek istiyorum",
-        "hayatıma son vermeyi düşünüyorum"
+        "kendime kıymayı düşünüyorum",
+        "kendimi öldürmek istiyorum",
+        "kendimi öldürmeyi düşünüyorum",
+        "kendimi öldürmeyi planlıyorum",
+        "veda etmek istiyorum",
+        "yaşamıma son",
+        "yaşamıma son vermek istiyorum",
+        "yaşamıma son vermeyi düşünüyorum",
+        "yaşamımı sonlandırmak",
+        "ölmek istiyorum"
       ]
     },
     "mood_passive_suicide": {
       "terms": [
-        "yaşamak istemiyorum",
-        "olmasaydım daha iyi olurdu",
-        "yaşamaya değmez",
-        "yaşam anlamsız",
+        "bir daha uyanmamak istiyorum",
+        "bitsin artık",
+        "buradan gitmek istiyorum sonsuza",
+        "dünyaya gelmeseydim",
         "hayat anlamsız",
+        "hiç doğmamış olsaydım",
+        "kaybolmak istiyorum",
+        "olmasaydım daha iyi olurdu",
+        "uyanmak istemiyorum",
+        "uyuyup hiç uyanmamak",
+        "yaşam anlamsız",
+        "yaşamak istemiyorum",
+        "yaşamak istemiyorum artık",
         "yaşamanın anlamı yok",
-        "bitsin artık"
+        "yaşamaya değmez",
+        "yok olmak istiyorum",
+        "yok olup gitmek istiyorum"
       ]
     },
     "mood_self_harm": {
@@ -622,15 +643,17 @@
     },
     "eating_disorder": {
       "terms": [
-        "yemekten sonra kusuyorum",
-        "kusarak çıkarıyorum",
-        "tıkın",
-        "tıkınıyorum",
-        "aşırı kısıtlama",
-        "yemek yemiyorum kilo",
         "anoreksi",
         "bulimi",
-        "yeme bozukluğu"
+        "ortoreksi",
+        "yeme bozukluğu",
+        "yeme bozukluğum",
+        "tıkınırcasına yeme",
+        "tıkınıyorum",
+        "tıkındım",
+        "tıkınma nöbeti",
+        "tıkınma atağı",
+        "aşırı kısıtlama"
       ]
     },
     "ocd_compulsion": {
@@ -957,6 +980,334 @@
         "12 aydan uzun",
         "işe dönemedim yas",
         "yastan sonra yatağa çakıldım"
+      ],
+      "feature_only": true
+    },
+    "harm_other_act": {
+      "terms": [
+        "eşime vurdum",
+        "kocama vurdum",
+        "karıma vurdum",
+        "partnerime vurdum",
+        "çocuğuma vurdum",
+        "çocuğuma el kaldırdım",
+        "oğluma vurdum",
+        "kızıma vurdum",
+        "elimi kaldırdım",
+        "el kaldırdım ona",
+        "tokat attım",
+        "dövdüm onu",
+        "ona zarar verdim",
+        "canını yaktım"
+      ]
+    },
+    "harm_other_urge": {
+      "terms": [
+        "birine zarar vereceğim",
+        "ona zarar vereceğim",
+        "zarar vermekten korkuyorum",
+        "kendimi tutamıyorum",
+        "kontrolümü kaybediyorum",
+        "bir şey yapacağım korkusu",
+        "vuracağım diye korkuyorum",
+        "canını yakacağım",
+        "öldüreceğim onu",
+        "elim kalkacak",
+        "kendimi tutamayacağım"
+      ]
+    },
+    "ed_purge_act": {
+      "terms": [
+        "yedikten sonra kusuyorum",
+        "yemekten sonra kusuyorum",
+        "yedikten sonra kusma",
+        "kendimi kusturuyorum",
+        "kendimi kusturdum",
+        "kendimi kusturmak",
+        "parmağımı sokup kusuyorum",
+        "kusarak çıkarıyorum",
+        "kusarak çıkarmak",
+        "yediklerimi çıkarıyorum",
+        "yediklerimi çıkarmak",
+        "yediklerimi geri çıkar",
+        "laksatif kullanıyorum",
+        "laksatif alıyorum",
+        "müshil kullanıyorum",
+        "müshil alıyorum",
+        "idrar söktürücü kullanıyorum",
+        "zayıflama hapı kullanıyorum",
+        "zayıflama hapı alıyorum",
+        "yedikten sonra çıkarıyorum"
+      ]
+    },
+    "ed_restrict_act": {
+      "terms": [
+        "günlerdir bir şey yemedim",
+        "günlerdir yemek yemiyorum",
+        "günlerdir hiçbir şey yemedim",
+        "iki gündür yemek yemedim",
+        "üç gündür yemek yemedim",
+        "iki gündür bir şey yemedim",
+        "kendimi aç bırakıyorum",
+        "kendimi aç bırakmak",
+        "aç kalarak zayıflıyorum",
+        "yemek yemeyi bıraktım",
+        "yemeyi tamamen kestim",
+        "hiçbir şey yemeden duruyorum",
+        "aç kalmayı tercih ediyorum",
+        "yemek yemiyorum kilo"
+      ]
+    },
+    "ed_compensatory_exercise": {
+      "terms": [
+        "yediğimi yakmak için",
+        "yediklerimi yakmak için",
+        "yediğim için spor yapıyorum",
+        "telafi etmek için spor",
+        "yediğimi telafi etmek",
+        "cezalandırmak için koşuyorum",
+        "yemek yedim diye spor",
+        "yediğim kadar spor"
+      ]
+    },
+    "weight_advice_request": {
+      "terms": [
+        "kaç kalori yemeliyim",
+        "kaç kalori almalıyım",
+        "kaç kalori almalıyim",
+        "günlük kalori hedefi",
+        "diyet listesi",
+        "diyet programı",
+        "beslenme programı",
+        "beslenme listesi",
+        "öğün planı",
+        "zayıflamak için ne yapmalıyım",
+        "zayıflamak için ne yapayım",
+        "kilo vermek için ne yapmalıyım",
+        "kilo vermeme yardım et",
+        "zayıflamama yardım et",
+        "kaç kilo vermeliyim",
+        "kaç kilo olmalıyım",
+        "ideal kilom",
+        "ideal kilom kaç",
+        "kilo almak için ne yemeliyim",
+        "hangi diyeti yapmalıyım"
+      ]
+    },
+    "pain_cauda_signs": {
+      "terms": [
+        "idrarımı tutamıyorum",
+        "idrar yapamıyorum",
+        "idrarımı kaçırıyorum",
+        "dışkımı tutamıyorum",
+        "dışkı kaçırıyorum",
+        "büyük abdestimi tutamıyorum",
+        "altıma kaçırıyorum",
+        "kasığımda uyuşma",
+        "iç uyluğumda uyuşma",
+        "makat çevresinde uyuşma",
+        "oturduğum yer uyuşuyor",
+        "iki bacağım da güçsüz",
+        "iki bacağımda da güçsüzlük",
+        "iki bacağımı da hissetmiyorum",
+        "bacaklarımda uyuşma ve idrar"
+      ]
+    },
+    "pain_systemic_flags": {
+      "terms": [
+        "gece ağrıdan uyanıyorum",
+        "ağrıdan uykudan uyanıyorum",
+        "geceleri ağrı uyandırıyor",
+        "gece ağrısı uyandırıyor",
+        "uykumdan ağrı uyandırıyor",
+        "kanser öyküm var",
+        "kanser tedavisi gördüm",
+        "kanser geçirdim",
+        "düştükten sonra ağrı",
+        "darbe sonrası ağrı",
+        "kazadan sonra ağrı",
+        "bacağımdaki güçsüzlük artıyor",
+        "güç kaybım ilerliyor",
+        "güçsüzlüğüm artıyor"
+      ]
+    },
+    "pain_word": {
+      "terms": [
+        "ağrı",
+        "ağrım",
+        "ağrıyor",
+        "ağrıyı",
+        "ağrısı",
+        "sızı",
+        "sancı",
+        "ağrılarım"
+      ],
+      "feature_only": true
+    },
+    "systemic_fever": {
+      "terms": [
+        "ateşim var",
+        "ateşim çıkıyor",
+        "ateşleniyorum",
+        "yüksek ateş",
+        "ateşim düşmüyor",
+        "ateşle birlikte"
+      ],
+      "feature_only": true
+    },
+    "systemic_weight_loss": {
+      "terms": [
+        "kilo kaybediyorum",
+        "kilo veriyorum",
+        "kilo kaybı",
+        "zayıflıyorum",
+        "kilo kaybettim"
+      ],
+      "feature_only": true
+    },
+    "no_diet_explanation": {
+      "terms": [
+        "diyet yapmıyorum",
+        "diyet yapmadığım",
+        "diyet yapmadan",
+        "sebepsiz",
+        "sebepsiz yere",
+        "açıklanamayan",
+        "açıklayamadığım",
+        "nedensiz",
+        "neden olduğunu bilmiyorum",
+        "kendiliğinden",
+        "istemeden",
+        "hiçbir şey yapmadan"
+      ],
+      "feature_only": true
+    },
+    "pain_axial_limb": {
+      "terms": [
+        "bel ağrı",
+        "belim ağrı",
+        "belimde ağrı",
+        "sırt ağrı",
+        "sırtım ağrı",
+        "sırtımda ağrı",
+        "boyun ağrı",
+        "boynum ağrı",
+        "boynumda ağrı",
+        "omurga",
+        "kalça ağrı",
+        "kalçamda ağrı",
+        "bacağım ağrı",
+        "bacağımda ağrı",
+        "bacak ağrı",
+        "eklem ağrı",
+        "eklemlerim ağrı",
+        "kemik ağrı",
+        "kemiklerim ağrı",
+        "kol ağrı",
+        "kolumda ağrı",
+        "kaburga ağrı"
+      ],
+      "feature_only": true
+    },
+    "gambling_activity": {
+      "terms": [
+        "bahis bağımlı",
+        "bahis borcu",
+        "bahis nedeniyle",
+        "bahis oynadım",
+        "bahis oynuyorum",
+        "bahis sitesi",
+        "bahis yüzünden",
+        "bahise yatırdım",
+        "bahiste kaybettim",
+        "canlı bahis",
+        "casino",
+        "iddaa oynuyorum",
+        "iddaa yüzünden",
+        "iddaaya yatırdım",
+        "kaybettiğimi geri kazanmak",
+        "kaybımı geri kazanmak",
+        "kumar bağımlı",
+        "kumar bağımlılığı",
+        "kumar borcu",
+        "kumar nedeniyle",
+        "kumar oynadım",
+        "kumar oynuyorum",
+        "kumar yüzünden",
+        "kumara",
+        "kumara yatırdım",
+        "kumarda kaybettim",
+        "poker oynuyorum",
+        "rulet oynuyorum",
+        "slot oynuyorum",
+        "yatırdığım parayı geri",
+        "şans oyunları borç"
+      ]
+    },
+    "debt_threat": {
+      "terms": [
+        "tefeci",
+        "tefeciden borç",
+        "tefeciye borcum",
+        "borcum yüzünden tehdit",
+        "alacaklılar tehdit",
+        "tehdit ediyorlar borç",
+        "ailemi tehdit ediyorlar",
+        "adamlar geldi evime",
+        "zarar veririz dediler",
+        "borcumu ödemezsem zarar",
+        "senedimi kırdılar",
+        "adam gönderdiler"
+      ]
+    },
+    "financial_advice_ask": {
+      "terms": [
+        "kredi çekeyim mi",
+        "hangi krediyi",
+        "kredi mi çekmeliyim",
+        "borcumu nasıl kapatırım",
+        "hangi borcu önce ödemeliyim",
+        "yapılandırma yapayım mı",
+        "faiz oranı",
+        "dolar mı altın mı",
+        "yatırım yapayım mı",
+        "hangi yatırım",
+        "borsaya girsem mi",
+        "kripto alayım mı",
+        "altın alayım mı",
+        "döviz alayım mı",
+        "bütçe planı yapar mısın",
+        "para biriktirmek için ne yapmalıyım",
+        "tasarruf için ne yapmalıyım"
+      ]
+    },
+    "debt_word": {
+      "terms": [
+        "borç",
+        "borcum",
+        "borcumu",
+        "borcumun",
+        "alacaklı",
+        "alacaklılar",
+        "senet",
+        "icra",
+        "tefeci"
+      ],
+      "feature_only": true
+    },
+    "threat_word": {
+      "terms": [
+        "tehdit edi",
+        "tehdit ett",
+        "ailemi tehdit",
+        "zarar vereceklerini",
+        "zarar veririz",
+        "zarar verecekler",
+        "adam gönderdiler",
+        "evime geldiler",
+        "canımı yakacaklar",
+        "seni bulurum dedi",
+        "kötü olur dediler"
       ],
       "feature_only": true
     }
@@ -1488,21 +1839,21 @@
       ]
     },
     "eating_disorder_signs": {
-      "description": "Eating disorder indicators — out of scope; surface both diagnosis-boundary and professional-evaluation routing",
+      "description": "Kullanıcı yeme bozukluğu tanısı beyan ediyor, tanı adı kullanıyor ya da tıkınma bildiriyor. Konuşma sürer (allow_cbt), egzersiz verilmez, uzman yönlendirmesi yapılır.",
       "requires_any": [
         [
           "eating_disorder"
         ]
       ],
       "target_card_ids": [
-        "safety_diagnosis_boundary_001",
-        "safety_psychosis_mania_001"
+        "safety_eating_disorder_support_001",
+        "safety_diagnosis_boundary_001"
       ],
-      "risk_level": "high",
+      "risk_level": "medium",
       "anchor_examples_tr": [
-        "yemekten sonra kusuyorum",
-        "yeme bozukluğum var",
-        "tıkınıp kusuyorum"
+        "yeme bozukluğum var, terapi görüyorum",
+        "bende anoreksi olabilir mi",
+        "akşamları tıkınıyorum ve sonra çok pişman oluyorum"
       ]
     },
     "ocd_signs": {
@@ -1833,6 +2184,225 @@
         "kardeşim intihar etti bazen ben de aynısını düşünüyorum",
         "abim kendini öldürdü aynısını yapmayı düşünüyorum bazen"
       ]
+    },
+    "harm_to_others_risk": {
+      "description": "Kullanıcı başkasına fiziksel zarar verdiğini ya da verme riski taşıdığını bildiriyor (fail konumunda). Mağdur konumundaki bildirimler abuse_disclosure_active kapsamındadır.",
+      "requires_any": [
+        [
+          "harm_other_act"
+        ],
+        [
+          "harm_other_urge"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_harm_to_others_001"
+      ],
+      "risk_level": "critical",
+      "anchor_examples_tr": [
+        "dün eşime vurdum çok pişmanım",
+        "çocuğuma el kaldırdım kendimi affedemiyorum",
+        "sinirlendiğimde kendimi tutamıyorum birine zarar vereceğim diye korkuyorum",
+        "kontrolümü kaybediyorum ve canını yakacağımdan korkuyorum"
+      ]
+    },
+    "eating_disorder_compensatory": {
+      "description": "Çıkarma (kusma, laksatif, müshil, idrar söktürücü) ya da yemeği telafi etmek için aşırı egzersiz. Tıbbi risk taşır — elektrolit ve kalp ritmi. CBT durur.",
+      "requires_any": [
+        [
+          "ed_purge_act"
+        ],
+        [
+          "ed_compensatory_exercise"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_eating_disorder_001"
+      ],
+      "risk_level": "high",
+      "anchor_examples_tr": [
+        "yedikten sonra kusuyorum ve bunu kimseye söyleyemiyorum",
+        "kendimi kusturuyorum, durduramıyorum",
+        "laksatif kullanıyorum kilo vermek için",
+        "yediğimi yakmak için saatlerce koşuyorum"
+      ]
+    },
+    "eating_disorder_restriction": {
+      "description": "Günlerce süren aç kalma ya da kilo için yemeyi kesme. Tıbbi değerlendirme gerekir. CBT durur.",
+      "requires_any": [
+        [
+          "ed_restrict_act"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_eating_disorder_001"
+      ],
+      "risk_level": "high",
+      "anchor_examples_tr": [
+        "günlerdir bir şey yemedim, böyle daha iyi hissediyorum",
+        "kendimi aç bırakıyorum çünkü kilo almaktan korkuyorum",
+        "yemek yemeyi bıraktım"
+      ]
+    },
+    "weight_diet_advice_request": {
+      "description": "Kilo verme/alma, kalori, diyet listesi ya da öğün planı isteği. Kapsam dışı — reddedilir, altındaki beden imajı konusuna geçilir.",
+      "requires_any": [
+        [
+          "weight_advice_request"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_weight_diet_advice_001"
+      ],
+      "risk_level": "low",
+      "anchor_examples_tr": [
+        "bana bir diyet listesi yazar mısın",
+        "günde kaç kalori yemeliyim",
+        "zayıflamak için ne yapmalıyım"
+      ]
+    },
+    "pain_cauda_equina": {
+      "description": "Eyer bölgesi uyuşması, mesane/bağırsak kontrol kaybı ya da iki taraflı bacak güçsüzlüğü — cerrahi acil. CBT durur, 112.",
+      "requires_any": [
+        [
+          "pain_cauda_signs"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_pain_red_flag_001"
+      ],
+      "risk_level": "critical",
+      "anchor_examples_tr": [
+        "bel ağrım var ve idrarımı tutamıyorum",
+        "kasığımda uyuşma başladı, iki bacağım da güçsüz",
+        "dışkımı tutamıyorum ve belimde ağrı var"
+      ]
+    },
+    "pain_systemic_red_flag": {
+      "description": "Ağrıyla birlikte ateş, açıklanamayan kilo kaybı, gece uyandıran ağrı, kanser öyküsü ya da travma sonrası ağrı — hızlı hekim değerlendirmesi. CBT durur.",
+      "requires_any": [
+        [
+          "pain_systemic_flags"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_pain_urgent_eval_001"
+      ],
+      "risk_level": "high",
+      "anchor_examples_tr": [
+        "sırtım ağrıyor ve ateşim var",
+        "gece ağrıdan uyanıyorum, kilo da kaybediyorum",
+        "kanser öyküm var, yeni bir ağrı başladı"
+      ]
+    },
+    "pain_with_fever": {
+      "description": "Ağrı ile birlikte ateş — enfeksiyon olasılığı, aynı gün hekim değerlendirmesi.",
+      "requires_all": [
+        [
+          "pain_axial_limb"
+        ],
+        [
+          "systemic_fever"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_pain_urgent_eval_001"
+      ],
+      "risk_level": "high",
+      "anchor_examples_tr": [
+        "sırtım ağrıyor ve ateşim var",
+        "ateşim var, belimde ağrı"
+      ]
+    },
+    "pain_with_weight_loss": {
+      "description": "Ağrı ile birlikte açıklanamayan kilo kaybı — hızlı hekim değerlendirmesi.",
+      "requires_all": [
+        [
+          "pain_axial_limb"
+        ],
+        [
+          "systemic_weight_loss"
+        ],
+        [
+          "no_diet_explanation"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_pain_urgent_eval_001"
+      ],
+      "risk_level": "high",
+      "anchor_examples_tr": [
+        "ağrım var ve diyet yapmadığım halde kilo veriyorum"
+      ]
+    },
+    "gambling_harm": {
+      "description": "Kumar/bahis nedeniyle para kaybı, borç, gizleme ya da durduramama. Konuşma sürer, egzersiz verilmez, YEDAM 115'e yönlendirilir.",
+      "requires_any": [
+        [
+          "gambling_activity"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_gambling_001"
+      ],
+      "risk_level": "high",
+      "anchor_examples_tr": [
+        "kumar oynuyorum, maaşımın hepsini kaybettim",
+        "bahis yüzünden borca girdim, eşime söyleyemiyorum",
+        "kaybettiğimi geri kazanmak için tekrar oynuyorum"
+      ]
+    },
+    "predatory_debt_threat": {
+      "description": "Borç nedeniyle tehdit, tefeci baskısı ya da yakınlarına zarar verileceği bildirimi. Güvenlik meselesi — CBT durur, 155 ve baro adli yardım.",
+      "requires_any": [
+        [
+          "debt_threat"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_debt_threat_001"
+      ],
+      "risk_level": "high",
+      "anchor_examples_tr": [
+        "tefeciden borç aldım, tehdit ediyorlar",
+        "borcumu ödemezsem aileme zarar vereceklerini söylediler"
+      ]
+    },
+    "financial_advice_request": {
+      "description": "Kredi, borç sırası, yapılandırma, yatırım, döviz ya da bütçe kararı sorusu. Kapsam dışı — reddedilir, altındaki kaygıya geçilir.",
+      "requires_any": [
+        [
+          "financial_advice_ask"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_financial_advice_001"
+      ],
+      "risk_level": "low",
+      "anchor_examples_tr": [
+        "kredi çekeyim mi",
+        "hangi borcu önce ödemeliyim",
+        "dolar mı altın mı almalıyım"
+      ]
+    },
+    "predatory_debt_threat_composed": {
+      "description": "Borç bağlamı ile tehdit ifadesinin bir arada geçmesi.",
+      "requires_all": [
+        [
+          "debt_word"
+        ],
+        [
+          "threat_word"
+        ]
+      ],
+      "target_card_ids": [
+        "safety_debt_threat_001"
+      ],
+      "risk_level": "high",
+      "anchor_examples_tr": [
+        "borcumu ödemezsem aileme zarar vereceklerini söylediler",
+        "alacaklılar beni tehdit ediyor"
+      ]
     }
   },
   "hard_rules": [
@@ -2015,6 +2585,61 @@
       "rule_id": "hr_join_deceased_2",
       "pattern_tr": "yanına gidebilmek için ölmek",
       "concept": "bereavement_suicidal_ideation"
+    },
+    {
+      "rule_id": "hr_ed_purge_1",
+      "pattern_tr": "yedikten sonra kusuyorum",
+      "concept": "eating_disorder_compensatory"
+    },
+    {
+      "rule_id": "hr_ed_purge_2",
+      "pattern_tr": "kendimi kusturuyorum",
+      "concept": "eating_disorder_compensatory"
+    },
+    {
+      "rule_id": "hr_ed_purge_3",
+      "pattern_tr": "laksatif kullanıyorum",
+      "concept": "eating_disorder_compensatory"
+    },
+    {
+      "rule_id": "hr_ed_restrict_1",
+      "pattern_tr": "kendimi aç bırakıyorum",
+      "concept": "eating_disorder_restriction"
+    },
+    {
+      "rule_id": "hr_ed_restrict_2",
+      "pattern_tr": "günlerdir bir şey yemedim",
+      "concept": "eating_disorder_restriction"
+    },
+    {
+      "rule_id": "hr_pain_cauda_1",
+      "pattern_tr": "idrarımı tutamıyorum",
+      "concept": "pain_cauda_equina"
+    },
+    {
+      "rule_id": "hr_pain_cauda_2",
+      "pattern_tr": "dışkımı tutamıyorum",
+      "concept": "pain_cauda_equina"
+    },
+    {
+      "rule_id": "hr_pain_cauda_3",
+      "pattern_tr": "kasığımda uyuşma",
+      "concept": "pain_cauda_equina"
+    },
+    {
+      "rule_id": "hr_explicit_suicide_5",
+      "pattern_tr": "her şeyi bitirmek istiyorum",
+      "concept": "active_suicidal_ideation"
+    },
+    {
+      "rule_id": "hr_explicit_suicide_6",
+      "pattern_tr": "her şeye son vermek istiyorum",
+      "concept": "active_suicidal_ideation"
+    },
+    {
+      "rule_id": "hr_explicit_suicide_7",
+      "pattern_tr": "yok olmak istiyorum",
+      "concept": "passive_suicidal_ideation"
     }
   ]
 }

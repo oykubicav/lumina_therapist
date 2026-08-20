@@ -67,6 +67,9 @@ def test_safety_cards_list(client):
     # Admin gate is open when CBT_ADMIN_TOKEN is unset
     r = client.get("/cards/safety")
     body = r.json()
-    assert body["total"] == 10
-    assert body["cards"][0]["card_id"]
-    assert body["cards"][0]["safe_response_template_tr"]
+    assert body["total"] >= 10
+    ids = {c["card_id"] for c in body["cards"]}
+    assert "safety_self_harm_suicide_001" in ids
+    for card in body["cards"]:
+        assert card["card_id"]
+        assert card["safe_response_template_tr"]

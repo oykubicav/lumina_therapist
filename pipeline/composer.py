@@ -358,6 +358,18 @@ def _build_user_prompt(
         "  Kullanıcının anlattığına en fazla bir cümlelik kişiselleştirme ekle.\n"
         "  Hiçbir CBT egzersizi verme. MUST_NOT_DO listesini ihlal etme."
     ) if not safety.allow_cbt else (
+        "BRANCH: allow_cbt = TRUE, blocks_exercise = TRUE — DESTEKLEYİCİ, EGZERSİZSİZ YOL.\n"
+        "  Konuşma devam eder, sıcaklık korunur — ama bu turda EGZERSİZ, TEKNİK,\n"
+        "  ADIM ADIM ÇALIŞMA ya da 'şunu dene' türü bir öneri VERİLMEZ.\n"
+        "  Yukarıdaki SAFETY CARD(S)'ın SAFE_RESPONSE_TEMPLATE_TR'sini temel al,\n"
+        "  kullanıcının anlattığına göre kişiselleştir.\n"
+        "\n"
+        "  KURALLAR:\n"
+        "  - Neden egzersiz vermediğini kısaca ve dürüstçe söyle; geçiştirme.\n"
+        "  - Uzman yönlendirmesini somut yap (aile hekimi, psikiyatri polikliniği).\n"
+        "  - MUST_NOT_DO listesini harfiyen uygula.\n"
+        "  - Konuşmayı kapatma; kullanıcıya ne konuşmak istediğini sor."
+    ) if getattr(safety, "blocks_exercise", False) else (
         "BRANCH: allow_cbt = TRUE — CBT PATH.\n"
         "  Yukarıdaki CBT CARD(S) içinden en uygun 1-2'sini temel al.\n"
         "  Varsa SAFETY CARD(S)'ın must_not_do kurallarını AYNI ZAMANDA uygula (ör. doktora gitmesin diye tavsiye verme)."
