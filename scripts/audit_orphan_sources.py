@@ -13,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-BASE = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base")
+BASE = Path(__file__).resolve().parent.parent
 
 # Collect all refs from CBT + safety cards
 all_refs = set()

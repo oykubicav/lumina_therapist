@@ -11,7 +11,7 @@ E. Guideline updates + ICD-11 — NICE NG222, WHO ICD-11, IAPT UK Manual
 import csv
 from pathlib import Path
 
-REG = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base/registry/source_registry.csv")
+REG = Path(__file__).resolve().parent.parent / "registry" / "source_registry.csv"
 
 NEW = [
     # A. Clinical assessment scales (reference for card content)

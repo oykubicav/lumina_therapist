@@ -11,7 +11,7 @@ Each test row = {
 import json
 from pathlib import Path
 
-TESTS = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base/evals/response_test_set.jsonl")
+TESTS = Path(__file__).resolve().parent.parent / "evals" / "response_test_set.jsonl"
 
 NEW = [
     # INSOMNIA — CBT branch

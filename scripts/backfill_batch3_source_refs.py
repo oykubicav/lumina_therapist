@@ -12,7 +12,7 @@ Rule: no source stays in registry without ≥1 card citation.
 import json
 from pathlib import Path
 
-CARDS = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base/cards/cbt_cards.jsonl")
+CARDS = Path(__file__).resolve().parent.parent / "cards" / "cbt_cards.jsonl"
 
 # Mapping: source_id → list of card_ids where it belongs
 
@@ -156,7 +156,7 @@ for source_id in MAPPING:
 
 # Also verify no orphan sources across the WHOLE registry
 import csv
-REG = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base/registry/source_registry.csv")
+REG = Path(__file__).resolve().parent.parent / "registry" / "source_registry.csv"
 with open(REG, encoding="utf-8") as f:
     reg_ids = [r["source_id"] for r in csv.DictReader(f)]
 

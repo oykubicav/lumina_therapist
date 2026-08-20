@@ -11,7 +11,7 @@ import csv
 import json
 from pathlib import Path
 
-BASE = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base")
+BASE = Path(__file__).resolve().parent.parent
 REG = BASE / "registry" / "source_registry.csv"
 CARDS = BASE / "cards" / "cbt_cards.jsonl"
 TESTS = BASE / "evals" / "response_test_set.jsonl"

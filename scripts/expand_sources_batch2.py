@@ -14,7 +14,7 @@ Adds ~20 high-legitimacy sources across all modules:
 import csv
 from pathlib import Path
 
-REG = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base/registry/source_registry.csv")
+REG = Path(__file__).resolve().parent.parent / "registry" / "source_registry.csv"
 
 NEW = [
     # CCI Perth workbooks (Centre for Clinical Interventions)

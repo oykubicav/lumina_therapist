@@ -14,8 +14,8 @@ import csv
 import json
 from pathlib import Path
 
-CARDS = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base/cards/cbt_cards.jsonl")
-REG = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base/registry/source_registry.csv")
+CARDS = Path(__file__).resolve().parent.parent / "cards" / "cbt_cards.jsonl"
+REG = Path(__file__).resolve().parent.parent / "registry" / "source_registry.csv"
 
 # Mapping: orphan source → cards where it naturally belongs
 

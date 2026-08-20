@@ -14,7 +14,7 @@ from pathlib import Path
 
 from pipeline.safety_classifier import classify
 
-TESTS = Path("/sessions/hopeful-cool-bell/mnt/cbt_knowledge_base/evals/response_test_set.jsonl")
+TESTS = Path(__file__).resolve().parent.parent / "evals" / "response_test_set.jsonl"
 
 with open(TESTS, encoding="utf-8") as f:
     all_tests = [json.loads(l) for l in f]
