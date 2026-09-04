@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LayoutGrid, Trash2, Send, Bug, HelpCircle } from "lucide-react";
-import { postChat, deleteSession } from "@/lib/api";
+import { postChat, deleteSession,getMySession } from "@/lib/api";
 import { getSessionId, setSessionId, clearSessionId } from "@/lib/session";
 import type { Turn } from "@/lib/types";
 import Message from "./Message";
@@ -17,6 +17,8 @@ import SessionHandoff from "./SessionHandoff";
 import CrisisConfirm from "./CrisisConfirm";
 import { useAuth } from "@/hooks/useAuth";
 import { LogIn, LogOut, User } from "lucide-react";
+import { History } from "lucide-react";
+import HistoryPanel from "./HistoryPanel";
 import { getName, getFocusLabels, markFocusUsed, clearProfile } from "@/lib/profile";
 
 function buildWelcome(name: string, focusLabels: string[]): string {
@@ -50,6 +52,7 @@ export default function ChatWindow() {
   const [boundary, setBoundary] = useState("normal");
   const [handoffDismissed, setHandoffDismissed] = useState(false);
   const [deniedTurns, setDeniedTurns] = useState<Set<string>>(new Set());
+  const [historyOpen, setHistoryOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [transparencyTurnId, setTransparencyTurnId] = useState<string | null>(null);
@@ -172,6 +175,42 @@ export default function ChatWindow() {
     );
     textareaRef.current?.focus();
   };
+    const openSession = async (id: string) => {
+    setHistoryOpen(false);
+    setError(null);
+    setPending(true);
+    try {
+      const detail = await getMySession(id);
+      const loaded: Turn[] = detail.turns.map((t) => ({
+        user_message: t.user_message ?? "",
+        ts: new Date(t.ts).getTime(),
+        chat: {
+          turn_id: t.turn_id,
+          session_id: detail.session_id,
+          response: t.response,
+          safety: {
+            route: "cbt_support",
+            allow_cbt: true,
+            highest_risk: "low",
+            matched_card_ids: [],
+          },
+          intent: { module: "unknown", subintent: "unknown", confidence: 0 },
+          retrieved_card_ids: [],
+          critic: { passed: true, rewrites: 0, used_fallback: false },
+          timing_ms: {},
+        },
+      }));
+      setTurns(loaded);
+      setSid(detail.session_id);
+      setSessionId(detail.session_id);
+      setHandoffDismissed(false);
+      setBoundary("normal");
+    } catch {
+      setError("Sohbet yüklenemedi.");
+    } finally {
+      setPending(false);
+    }
+  };
 
   // Ölçüm hatırlatması yalnızca hesabı olanlara — anonim oturumda geçmiş
   // saklanmadığı için "bu haftaki ölçüm" ifadesinin karşılığı yok.
@@ -208,6 +247,11 @@ export default function ChatWindow() {
                 onClick={() => setShowDebug((v) => !v)}
               >
                 <Bug size={16} strokeWidth={2.2} />
+              </IconButton>
+            )}
+              {isAuthenticated && (
+              <IconButton label="Sohbetlerim" onClick={() => setHistoryOpen(true)}>
+                <History size={16} strokeWidth={2.2} />
               </IconButton>
             )}
             <IconButton label="Konular" href="/cards">
@@ -397,6 +441,12 @@ export default function ChatWindow() {
           onClose={() => setTransparencyTurnId(null)}
         />
       )}
+      <HistoryPanel
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        activeSessionId={sessionId}
+        onSelect={openSession}
+      />
     </div>
   );
 }

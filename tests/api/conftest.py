@@ -21,6 +21,7 @@ def _env():
     os.environ["CBT_DB_URL"] = "sqlite:///:memory:"
     os.environ["CBT_HASH_SALT"] = "test-salt"
     os.environ["CBT_POLICY_VERSION"] = "0.2"
+    os.environ["CBT_JWT_SECRET"] = "test-only-jwt-secret-at-least-32-chars-long"
     yield
 
 

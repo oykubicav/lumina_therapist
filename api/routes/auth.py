@@ -19,7 +19,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status,Query
+from sqlalchemy import select, func as sqlfunc
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
@@ -27,7 +28,7 @@ from api.auth.dependencies import get_current_user
 from api.auth.email import send_verification_email, send_password_reset_email
 from api.auth.jwt_utils import encode_token
 from api.auth.passwords import hash_password, verify_password
-from api.db.models import User
+from api.db.models import User,ChatSession, Turn
 from api.deps import session_store_dep
 from api.session import InMemorySessionStore
 
@@ -61,7 +62,34 @@ class RegisterResponse(BaseModel):
     email_sent: bool
 class ResendVerifyRequest(BaseModel):
     email: EmailStr
+class SessionSummary(BaseModel):
+    session_id: str
+    title: str
+    created_at: str
+    last_active: str
+    turn_count: int
 
+class SessionListResponse(BaseModel):
+    sessions: list[SessionSummary]
+    total: int
+class SessionTurnView(BaseModel):
+    turn_id: str
+    ts: str
+    user_message: Optional[str]
+    response: str
+class SessionDetail(BaseModel):
+    session_id: str
+    title: str
+    created_at: str
+    last_active: str
+    turns: list[SessionTurnView]
+def _session_title(first_message: Optional[str], created_at: datetime) -> str:
+    """Başlık ilk kullanıcı mesajından türetiliyor — ayrı bir kolon yok.
+    Mesaj silinmişse tarihe düşüyor."""
+    if first_message:
+        t = " ".join(first_message.split())
+        return t[:57] + "…" if len(t) > 60 else t
+    return created_at.strftime("%d.%m.%Y") + " sohbeti"
 def _to_user_view(user: User) -> UserView:
     return UserView(
         id=str(user.id),
@@ -265,3 +293,114 @@ async def reset_password(
             raise HTTPException(status_code=500, detail="Şifre sıfırlama sırasında bir hata oluştu")
 
     return {"status": "ok", "message": "Şifre başarıyla sıfırlandı"}
+
+@router.get("/sessions", response_model=SessionListResponse)
+async def list_my_sessions(
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    user: User = Depends(get_current_user),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    factory = store._SessionLocal()
+    with factory() as db:
+        total = db.execute(
+            select(sqlfunc.count(ChatSession.id)).where(ChatSession.user_id == user.id)
+        ).scalar_one()
+        rows= db.execute(
+            select(ChatSession)
+            .where(ChatSession.user_id == user.id)
+            .order_by(ChatSession.last_active.desc())
+            .limit(limit)
+            .offset(offset)
+        ).scalars().all()
+        ids = [s.id for s in rows]
+        counts,firsts = {},{}
+        if ids:
+            counts=dict(db.execute(
+                select(Turn.session_id, sqlfunc.count(Turn.id))
+                .where(Turn.session_id.in_(ids))
+                .group_by(Turn.session_id)
+            ).all())
+            for sid,msg in db.execute(
+                select(Turn.session_id, Turn.user_message)
+                .where(Turn.session_id.in_(ids))
+                .order_by(Turn.ts.asc())
+            ).all():
+                firsts.setdefault(sid,msg)
+        out =[
+            SessionSummary(
+                session_id=str(s.id),
+                title=_session_title(firsts.get(s.id), s.created_at),
+                created_at=s.created_at.isoformat(),
+                last_active=s.last_active.isoformat(),
+                turn_count=counts.get(s.id, 0),
+            )
+            for s in rows
+            if counts.get(s.id, 0) > 0  # only include sessions with at least one turn
+        ]
+        return SessionListResponse(sessions=out, total=total)
+
+    
+
+
+
+@router.get("/sessions/{session_id}", response_model=SessionDetail)
+async def get_my_session(
+    session_id:str,
+    user: User = Depends(get_current_user),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    try:
+        sid=uuid.UUID(session_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=404, detail="Sohbet bulunamadı")
+    factory = store._SessionLocal()
+    with factory() as db:
+        sess= db.get(ChatSession, sid)
+        if sess is None or sess.user_id != user.id:
+            raise HTTPException(status_code=404, detail="Sohbet bulunamadı")
+        rows = db.execute(
+            select(Turn).where(Turn.session_id == sid).order_by(Turn.ts.asc())
+        ).scalars().all()
+        return SessionDetail(
+            session_id=str(sess.id),
+            title=_session_title(rows[0].user_message if rows else None, sess.created_at),
+            created_at=sess.created_at.isoformat(),
+            last_active=sess.last_active.isoformat(),
+            turns=[
+                SessionTurnView(
+                    turn_id=str(t.id),
+                    ts=t.ts.isoformat(),
+                    user_message=t.user_message,
+                    response=t.response,
+                )
+                for t in rows
+            ],
+        )
+@router.delete("/sessions/{session_id}")
+async def delete_my_session(
+    session_id: str,
+    user: User = Depends(get_current_user),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    try:
+        sid = uuid.UUID(session_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=404, detail="Sohbet bulunamadı")
+
+    factory = store._SessionLocal()
+    with factory() as db, db.begin():
+        sess = db.get(ChatSession, sid)
+        if sess is None or sess.user_id != user.id:
+            raise HTTPException(status_code=404, detail="Sohbet bulunamadı")
+        db.delete(sess)
+    return {"status": "deleted"}
+    
+    
+
+
+
+
+
+
+    

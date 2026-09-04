@@ -116,7 +116,7 @@ async def chat(
     # Prior conversation for multi-turn context. If session is new or empty,
     # get_history returns [] and pipeline behaves exactly as single-turn.
     history = store.get_history(session_id)
-    turn_count = len(history) + 1
+    turn_count = store.sitting_turn_count(session_id) + 1
 
     # Longitudinal profile — arka planda güncellenen yapılandırılmış özet.
     # İlk turn'de boş; sonraki turnlerde composer'a "hatırlıyorum" hissi verir.

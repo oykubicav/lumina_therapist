@@ -42,6 +42,9 @@ def _hash_message(msg: str) -> str:
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+def _as_utc(dt: datetime) -> datetime:
+    """SQLite naive datetime döndürebiliyor — karşılaştırma öncesi normalize et."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
 
 class DbSessionStore:
@@ -130,7 +133,7 @@ class DbSessionStore:
                 intent_json=intent_json,
                 critic_json=critic_json,
                 timing_ms_json=timing_ms_json,
-                retention_ends_at=_now() + timedelta(seconds=self._ttl),
+                retention_ends_at=None if sess.user_id else _now() + timedelta(seconds=self._ttl),
                 model_version=model_version,
                 boundary_state=boundary_state,
                 retrieved_card_ids=retrieved_card_ids,
@@ -172,21 +175,56 @@ class DbSessionStore:
                 "turns": turns,
             }
 
-    def get_history(self, session_id: str) -> list[dict]:
+    def get_history(self, session_id: str,limit:int=60 ) -> list[dict]:
         try:
             sid_uuid = uuid.UUID(session_id)
         except (ValueError, TypeError):
             return []
         SessionLocal = self._SessionLocal()
         with SessionLocal() as s:
+            # Son `limit` turu kronolojik sırada döndür. Sıralamayı ters
+            # çevirmek yerine sayıp kaydırıyoruz: ts kolonu SQLite'ta saniye
+            # çözünürlüğünde ve aynı saniyedeki turlar eşit damga alıyor —
+            # desc() böyle durumlarda ekleme sırasını bozuyor.
+            total = s.execute(
+                select(sqlfunc.count(Turn.id)).where(Turn.session_id == sid_uuid)
+            ).scalar_one()
             rows = s.execute(
-                select(Turn).where(Turn.session_id == sid_uuid).order_by(Turn.ts.asc())
+                select(Turn)
+                .where(Turn.session_id == sid_uuid)
+                .order_by(Turn.ts.asc())
+                .offset(max(0, total - limit))
+                .limit(limit)
             ).scalars().all()
             return [
                 {"user_message": r.user_message or "", "response": r.response}
                 for r in rows
             ]
+    
+    def sitting_turn_count(self, session_id: str, gap_seconds: int = 21600) -> int:
+        try:
+            sid_uuid = uuid.UUID(session_id)
+        except (ValueError, TypeError):
+            return 0
 
+        SessionLocal = self._SessionLocal()
+        with SessionLocal() as s:
+            stamps = s.execute(
+                select(Turn.ts).where(Turn.session_id == sid_uuid).order_by(Turn.ts.asc())
+            ).scalars().all()
+
+        count = 0
+        prev = None
+        for ts in stamps:
+            ts = _as_utc(ts)
+            if prev is not None and (ts - prev).total_seconds() > gap_seconds:
+                count = 0
+            count += 1
+            prev = ts
+
+        if prev is not None and (_now() - prev).total_seconds() > gap_seconds:
+            count = 0
+        return count
     def delete(self, session_id: str) -> bool:
         try:
             sid_uuid = uuid.UUID(session_id)
@@ -213,7 +251,12 @@ class DbSessionStore:
         cutoff = _now() - timedelta(seconds=self._ttl)
         SessionLocal = self._SessionLocal()
         with SessionLocal() as s, s.begin():
-            s.execute(sql_delete(ChatSession).where(ChatSession.last_active < cutoff))
+            s.execute(sql_delete(ChatSession).where(ChatSession.last_active < cutoff,
+                      ChatSession.user_id.is_(None),
+                      )
+            )
+                        
+     # only delete sessions with no user attached
 
 
     def attach_user(self, session_id: str, user_id: uuid.UUID) -> None:

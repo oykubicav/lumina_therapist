@@ -179,3 +179,31 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export interface SessionSummary {
+  session_id: string;
+  title: string;
+  created_at: string;
+  last_active: string;
+  turn_count: number;
+}
+
+export interface SessionListResponse {
+  sessions: SessionSummary[];
+  total: number;
+}
+
+export interface SessionTurnView {
+  turn_id: string;
+  ts: string;
+  user_message: string | null;
+  response: string;
+}
+
+export interface SessionDetail {
+  session_id: string;
+  title: string;
+  created_at: string;
+  last_active: string;
+  turns: SessionTurnView[];
+}
+

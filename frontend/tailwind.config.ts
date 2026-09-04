@@ -118,12 +118,17 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        slideInLeft: {
+          "0%": { opacity: "0", transform: "translateX(-12px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
       },
       animation: {
         "fade-in": "fadeIn 200ms ease-out",
         "slide-up": "slideUp 260ms cubic-bezier(0.16, 1, 0.3, 1)",
         "modal-in": "modalIn 300ms cubic-bezier(0.16, 1, 0.3, 1)",
         "hero-in": "heroIn 600ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-in-left": "slideInLeft 220ms cubic-bezier(0.16, 1, 0.3, 1)",
       },
       backdropBlur: {
         xs: "6px",

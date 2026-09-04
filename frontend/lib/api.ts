@@ -13,6 +13,8 @@ import type {
   TransparencyView,
   AuthUser,
   LoginResponse,
+  SessionListResponse,
+  SessionDetail,
 
 
 } from "./types";
@@ -200,10 +202,30 @@ export async function postResendVerify(email: string): Promise<{ status: string 
     method: "POST",
     body: JSON.stringify({ email }),
   });
+
+}
+// Sohbet geçmişi — sadece kayıtlı kullanıcı
+
+export async function listMySessions(
+  params: { limit?: number; offset?: number } = {}
+): Promise<SessionListResponse> {
+  const qs = new URLSearchParams();
+  if (params.limit != null) qs.set("limit", String(params.limit));
+  if (params.offset != null) qs.set("offset", String(params.offset));
+  const suffix = qs.toString() ? `?${qs}` : "";
+  return fetchJson<SessionListResponse>(`/auth/sessions${suffix}`);
 }
 
+export async function getMySession(sessionId: string): Promise<SessionDetail> {
+  return fetchJson<SessionDetail>(`/auth/sessions/${sessionId}`);
+}
 
-
-
+export async function deleteMySession(
+  sessionId: string
+): Promise<{ status: string }> {
+  return fetchJson<{ status: string }>(`/auth/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+}
 
 
