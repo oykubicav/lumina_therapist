@@ -15,6 +15,7 @@ import type {
   LoginResponse,
   SessionListResponse,
   SessionDetail,
+  ProfileUpdate,
 
 
 } from "./types";
@@ -193,6 +194,13 @@ export async function postResetPassword(token: string, newPassword: string): Pro
 }
 export async function getMe(): Promise<AuthUser> {
   return fetchJson<AuthUser>("/auth/me");
+}
+
+export async function patchMyProfile(req: ProfileUpdate): Promise<AuthUser> {
+  return fetchJson<AuthUser>("/auth/me/profile", {
+    method: "PATCH",
+    body: JSON.stringify(req),
+  });
 }
 export async function deleteMe(): Promise<{ status: string }> {
   return fetchJson("/auth/me", { method: "DELETE" });

@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { FOCUS_OPTIONS, saveProfile, skipOnboarding } from "@/lib/profile";
+import { FOCUS_OPTIONS } from "@/lib/profile";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Onboarding({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState<0 | 1>(0);
   const [name, setName] = useState("");
   const [focus, setFocus] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const { updateProfile } = useAuth();
 
   function toggle(id: string) {
     setFocus((prev) => {
@@ -18,14 +21,27 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
     });
   }
 
+  // Kayıt başarısız olsa da kullanıcıyı ekranda tutmuyoruz — sohbete geçmesi
+  // profil kaydından önemli. Kaydedilmediyse bir sonraki girişte tekrar sorulur.
+  async function save(payload: { display_name?: string; focus_topics?: string[] }) {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await updateProfile(payload);
+    } catch {
+      // sessiz geç
+    } finally {
+      setSaving(false);
+      onDone();
+    }
+  }
+
   function finish() {
-    saveProfile(name, focus);
-    onDone();
+    void save({ display_name: name.trim(), focus_topics: focus });
   }
 
   function skip() {
-    skipOnboarding();
-    onDone();
+    void save({});
   }
 
   return (
@@ -117,9 +133,10 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                 </button>
                 <button
                   onClick={finish}
-                  className="flex-1 h-12 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 transition-opacity"
+                  disabled={saving}
+                  className="flex-1 h-12 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[15px] font-medium hover:opacity-85 disabled:opacity-50 transition-opacity"
                 >
-                  Konuşmaya başla
+                  {saving ? "Kaydediliyor…" : "Konuşmaya başla"}
                 </button>
               </div>
             </div>

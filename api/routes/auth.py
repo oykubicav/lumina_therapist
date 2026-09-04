@@ -53,6 +53,16 @@ class UserView(BaseModel):
     email:str
     email_verified:bool
     created_at: str
+    display_name: Optional[str] = None
+    focus_topics: list[str] = []
+    onboarded_at: Optional[str] = None
+
+
+class ProfileUpdate(BaseModel):
+    """Onboarding ekranından gelen tercihler. İkisi de isteğe bağlı —
+    kullanıcı adı boş bırakıp yalnızca konu seçebilir ya da tümünü atlayabilir."""
+    display_name: Optional[str] = Field(None, max_length=60)
+    focus_topics: Optional[list[str]] = Field(None, max_length=10)
 class TokenResponse(BaseModel):
     access_token:str
     token_type:str = "bearer"
@@ -90,12 +100,29 @@ def _session_title(first_message: Optional[str], created_at: datetime) -> str:
         t = " ".join(first_message.split())
         return t[:57] + "…" if len(t) > 60 else t
     return created_at.strftime("%d.%m.%Y") + " sohbeti"
+def _iso_utc(dt: Optional[datetime]) -> Optional[str]:
+    """Her zaman saat dilimi bilgisiyle döndür.
+
+    SQLite tz bilgisini saklamıyor, Postgres saklıyor. Normalize etmezsek
+    aynı alan ortama göre farklı biçimde çıkıyor ve istemci naive değeri
+    yerel saat sanabiliyor.
+    """
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
 def _to_user_view(user: User) -> UserView:
     return UserView(
         id=str(user.id),
         email=user.email,
         email_verified=user.email_verified,
-        created_at=user.created_at.isoformat()
+        created_at=_iso_utc(user.created_at),
+        display_name=user.display_name,
+        focus_topics=user.focus_topics or [],
+        onboarded_at=_iso_utc(user.onboarded_at),
     )
 
 
@@ -218,6 +245,45 @@ async def get_me(
 ):
     """Current user info. Auth required (401 if no token)."""
     return _to_user_view(user)
+
+_FOCUS_IDS = {
+    "anxiety", "mood", "sleep", "self", "work",
+    "relationships", "loss", "change", "panic", "unsure",
+}
+
+
+@router.patch("/me/profile", response_model=UserView)
+async def update_my_profile(
+    req: ProfileUpdate,
+    user: User = Depends(get_current_user),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Onboarding tercihlerini kaydeder ve onboarded_at'i damgalar.
+
+    Boş gövdeyle çağrılması geçerli: kullanıcı adı da konu da vermeden
+    "şimdilik geç" dediğinde tekrar sorulmaması için damga yine atılır.
+    """
+    factory = store._SessionLocal()
+    with factory() as db, db.begin():
+        row = db.get(User, user.id)
+        if row is None:
+            raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+
+        if req.display_name is not None:
+            temiz = req.display_name.strip()
+            row.display_name = temiz[:60] or None
+
+        if req.focus_topics is not None:
+            row.focus_topics = [t for t in req.focus_topics if t in _FOCUS_IDS]
+
+        if row.onboarded_at is None:
+            row.onboarded_at = datetime.now(timezone.utc)
+
+        db.flush()
+        view = _to_user_view(row)
+
+    return view
+
 
 @router.delete("/me")
 async def delete_me(

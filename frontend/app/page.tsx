@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { hasConsent } from "@/lib/consent";
-import { hasOnboarded, syncProfileOwner } from "@/lib/profile";
+import { readLegacyLocalProfile, clearLegacyMarkers } from "@/lib/profile";
 import ConsentModal from "@/components/ConsentModal";
 import ChatWindow from "@/components/ChatWindow";
 import Landing from "@/components/Landing";
@@ -14,28 +14,31 @@ import { useAuth } from "@/hooks/useAuth";
 type Stage = "landing" | "consent" | "onboarding" | "chat";
 
 export default function Page() {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, user, updateProfile } = useAuth();
   const [state, setState] = useState<Stage>("landing");
   const [mounted, setMounted] = useState(false);
-  const [ownerChecked, setOwnerChecked] = useState(false);
   const [showOptIn, setShowOptIn] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Profil cihazda tutuluyor; hesap değişmişse öncekini taşıma.
+  // Sunucuya geçişten önce cihazda kalmış ad/konu bir kez yukarı taşınır,
+  // böylece eskiden onboarding yapmış kullanıcıya tekrar sorulmuyor.
   useEffect(() => {
-    if (loading) return;
-    syncProfileOwner(user?.email ?? "anon");
-    setOwnerChecked(true);
-  }, [loading, user?.email]);
+    if (loading || !user || user.onboarded_at) return;
+    const eski = readLegacyLocalProfile();
+    if (!eski) return;
+    updateProfile({ display_name: eski.name, focus_topics: eski.focus })
+      .catch(() => {})
+      .finally(clearLegacyMarkers);
+  }, [loading, user, updateProfile]);
 
   useEffect(() => {
-    if (!loading && ownerChecked && isAuthenticated) {
+    if (!loading && isAuthenticated) {
       setState(nextStage());
     }
-  }, [loading, ownerChecked, isAuthenticated]);
+  }, [loading, isAuthenticated, user?.onboarded_at]);
 
   useEffect(() => {
     if (state === "chat" && isAuthenticated && !hasDecided()) {
@@ -45,14 +48,15 @@ export default function Page() {
   }, [state, isAuthenticated]);
 
   // Onboarding yalnızca hesabı olan kullanıcıya, ilk girişinde.
-  // Üyeliksiz kullanımda isim/konu sormanın karşılığı yok.
+  // Karar sunucudaki onboarded_at damgasına bakıyor; cihazdaki bir veri
+  // kaybı ya da geçici oturum düşmesi onboarding'i tekrar açmıyor.
   function nextStage(): Stage {
     if (!hasConsent()) return "consent";
-    if (isAuthenticated && !hasOnboarded()) return "onboarding";
+    if (isAuthenticated && !user?.onboarded_at) return "onboarding";
     return "chat";
   }
 
-  if (!mounted || loading || !ownerChecked) return null;
+  if (!mounted || loading) return null;
 
   if (state === "onboarding") {
     return <Onboarding onDone={() => setState("chat")} />;
@@ -73,7 +77,7 @@ export default function Page() {
       {state === "consent" && (
         <ConsentModal
           onGranted={() =>
-            setState(isAuthenticated && !hasOnboarded() ? "onboarding" : "chat")
+            setState(isAuthenticated && !user?.onboarded_at ? "onboarding" : "chat")
           }
         />
       )}

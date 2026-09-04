@@ -1,7 +1,16 @@
+// Hesap profilinin cihaz-yerel önbelleği.
+//
+// Kaynak doğruluk sunucuda: users.display_name / focus_topics / onboarded_at.
+// Burası yalnızca senkron okuma için kopya tutuyor — ChatWindow karşılama
+// metnini render sırasında kuruyor ve orada await edemiyoruz.
+//
+// Önbellek kaybolursa kimse zarar görmez; useAuth bir sonraki /auth/me
+// yanıtında yeniden yazıyor.
+
+import type { AuthUser } from "./types";
+
 const NAME_KEY = "neva_name";
 const FOCUS_KEY = "neva_focus";
-const DONE_KEY = "neva_onboarded";
-const OWNER_KEY = "neva_profile_owner";
 const FOCUS_USED_KEY = "neva_focus_used";
 
 export interface FocusOption {
@@ -39,6 +48,9 @@ export function getFocus(): string[] {
   }
 }
 
+// Seçilen konular yalnızca ilk karşılamada anılır. Bu bayrak cihaza özel
+// ve kasten sunucuya taşınmadı — kaybolursa en fazla selamlama bir kez
+// daha konulardan bahseder.
 export function getFocusLabels(): string[] {
   if (typeof window === "undefined") return [];
   if (window.localStorage.getItem(FOCUS_USED_KEY) === "true") return [];
@@ -53,40 +65,39 @@ export function markFocusUsed(): void {
   window.localStorage.setItem(FOCUS_USED_KEY, "true");
 }
 
-export function syncProfileOwner(ownerId: string): void {
+/** Sunucudan gelen kullanıcıyı önbelleğe yaz. Kullanıcı yoksa temizle. */
+export function cacheProfileFromUser(user: AuthUser | null): void {
   if (typeof window === "undefined") return;
-  const stored = window.localStorage.getItem(OWNER_KEY);
-  if (stored === ownerId) return;
-  clearProfile();
-  window.localStorage.setItem(OWNER_KEY, ownerId);
-}
-
-export function saveProfile(name: string, focus: string[]): void {
-  if (typeof window === "undefined") return;
-  const trimmed = name.trim();
-  if (trimmed) {
-    window.localStorage.setItem(NAME_KEY, trimmed);
+  if (!user) {
+    clearProfile();
+    return;
+  }
+  if (user.display_name) {
+    window.localStorage.setItem(NAME_KEY, user.display_name);
   } else {
     window.localStorage.removeItem(NAME_KEY);
   }
-  window.localStorage.setItem(FOCUS_KEY, JSON.stringify(focus));
-  window.localStorage.setItem(DONE_KEY, "true");
-}
-
-export function skipOnboarding(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(DONE_KEY, "true");
-}
-
-export function hasOnboarded(): boolean {
-  if (typeof window === "undefined") return true;
-  return window.localStorage.getItem(DONE_KEY) === "true";
+  window.localStorage.setItem(FOCUS_KEY, JSON.stringify(user.focus_topics || []));
 }
 
 export function clearProfile(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(NAME_KEY);
   window.localStorage.removeItem(FOCUS_KEY);
-  window.localStorage.removeItem(DONE_KEY);
   window.localStorage.removeItem(FOCUS_USED_KEY);
+}
+
+/** Sunucuya geçişten önce cihazda kalmış ad/konu — bir kez yukarı taşınır. */
+export function readLegacyLocalProfile(): { name: string; focus: string[] } | null {
+  if (typeof window === "undefined") return null;
+  if (window.localStorage.getItem("neva_onboarded") !== "true") return null;
+  const name = window.localStorage.getItem(NAME_KEY) || "";
+  const focus = getFocus();
+  return { name, focus };
+}
+
+export function clearLegacyMarkers(): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem("neva_onboarded");
+  window.localStorage.removeItem("neva_profile_owner");
 }

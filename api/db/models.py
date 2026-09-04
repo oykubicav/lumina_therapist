@@ -114,6 +114,12 @@ class User(Base):
     reset_token: Mapped[str | None] = mapped_column(String(64), nullable=True)          # password reset link için
     reset_token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Onboarding tercihleri. Cihazda değil hesapta duruyor: localStorage'daki
+    # hali cihaz değişince kayboluyor ve çıkış-giriş döngüsünde siliniyordu.
+    display_name: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    focus_topics: Mapped[list | None] = mapped_column(PortableJSON, nullable=True)
+    onboarded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     sessions: Mapped[list["ChatSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 

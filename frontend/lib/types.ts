@@ -171,6 +171,14 @@ export interface AuthUser {
   email: string;
   email_verified: boolean;
   created_at: string;
+  display_name: string | null;
+  focus_topics: string[];
+  onboarded_at: string | null;
+}
+
+export interface ProfileUpdate {
+  display_name?: string | null;
+  focus_topics?: string[];
 }
 
 export interface LoginResponse {

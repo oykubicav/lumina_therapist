@@ -15,7 +15,11 @@ import uuid
 from jose import jwt, JWTError
 
 _JWT_ALGORITHM = os.environ.get("CBT_JWT_ALGORITHM", "HS256")
-_JWT_EXPIRE_HOURS = int(os.environ.get("CBT_JWT_EXPIRE_HOURS", "168"))
+# 72 saat. Ruh sağlığı verisi taşıyan bir oturum için 7 gün uzun; ama çok
+# kısa tutmak da "kötü hissettiğimde açayım" kullanımını bozuyor, insanlar
+# günler arayla giriyor. İptal edilebilirlik için refresh token gerekiyor,
+# o ayrı bir iş.
+_JWT_EXPIRE_HOURS = int(os.environ.get("CBT_JWT_EXPIRE_HOURS", "72"))
 
 _MIN_SECRET_LEN = 32
 
