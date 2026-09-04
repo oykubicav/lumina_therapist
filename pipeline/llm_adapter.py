@@ -114,11 +114,14 @@ def llm_complete(
 
 
 # Provider implementations
-def _call_anthropic(system, user, *, model, max_tokens, temperature):
+def _call_anthropic(system, user, *, model, max_tokens, temperature=None):
     """Calls Anthropic Claude. Requires ANTHROPIC_API_KEY env var.
 
     Lazy-imported so the pipeline can be used in mock mode without
     the anthropic package installed.
+
+    temperature kabul ediliyor ama kullanılmıyor — ortak llm_complete imzası
+    korunsun diye. Gerekçe aşağıdaki çağrının yanında.
     """
     try:
         import anthropic
@@ -135,10 +138,14 @@ def _call_anthropic(system, user, *, model, max_tokens, temperature):
 
     client = anthropic.Anthropic(api_key=api_key)
     model = model or config.LLM_MODEL_COMPOSER
+    # temperature Anthropic'e GÖNDERİLMİYOR. SDK v1.0 (Ağustos 2026) sampling
+    # parametrelerini Messages imzasından kaldırdı; göndermek TypeError veriyor.
+    # API tarafında da kullanımdan kaldırıldılar, varsayılan dışı değer 400 dönüyor.
+    # Parametre llm_complete imzasında duruyor çünkü openai/local sağlayıcıları
+    # hâlâ kabul ediyor; belirlenimci davranış artık prompt ile sağlanıyor.
     resp = client.messages.create(
         model=model,
         max_tokens=max_tokens,
-        temperature=temperature,
         system=system,
         messages=[{"role": "user", "content": user}],
     )

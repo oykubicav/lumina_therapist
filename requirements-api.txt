@@ -4,7 +4,7 @@ uvicorn[standard]>=0.32
 pydantic>=2.9
 
 # LLM providers
-anthropic>=0.39
+anthropic>=1.0,<2
 
 # Retrieval + embeddings
 # NOT: sentence-transformers (torch) prod imajında yok — CBT_PREFER_ST=0 ile
