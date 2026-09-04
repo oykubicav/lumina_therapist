@@ -128,6 +128,55 @@ def test_profile_survives_relogin(client, auth):
     assert me["onboarded_at"] is not None
 
 
+def test_focus_greeted_starts_empty(client, auth):
+    me = client.get("/auth/me", headers=auth["headers"]).json()
+    assert me["focus_greeted_at"] is None
+
+
+def test_focus_greeted_stamped_once(client, auth):
+    """Konular karşılamada bir kez anılır; damga sonradan ileri taşınmaz."""
+    client.patch(
+        "/auth/me/profile",
+        json={"focus_topics": ["anxiety", "work"]},
+        headers=auth["headers"],
+    )
+
+    ilk = client.patch(
+        "/auth/me/profile", json={"focus_greeted": True}, headers=auth["headers"]
+    ).json()["focus_greeted_at"]
+    assert ilk is not None
+
+    ikinci = client.patch(
+        "/auth/me/profile", json={"focus_greeted": True}, headers=auth["headers"]
+    ).json()["focus_greeted_at"]
+    assert ikinci == ilk
+
+
+def test_focus_greeted_survives_relogin(client, auth):
+    """Asıl şikayet: her yeni sohbette aynı 'şunları demiştin' cümlesi."""
+    client.patch(
+        "/auth/me/profile",
+        json={"focus_topics": ["anxiety"], "focus_greeted": True},
+        headers=auth["headers"],
+    )
+
+    r = client.post(
+        "/auth/login", json={"email": auth["email"], "password": "parola12345"}
+    )
+    yeni = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    me = client.get("/auth/me", headers=yeni).json()
+    assert me["focus_greeted_at"] is not None
+    assert me["focus_topics"] == ["anxiety"]
+
+
+def test_focus_greeted_false_does_not_stamp(client, auth):
+    r = client.patch(
+        "/auth/me/profile", json={"focus_greeted": False}, headers=auth["headers"]
+    )
+    assert r.json()["focus_greeted_at"] is None
+
+
 def test_profile_isolated_between_users(client, auth):
     client.patch(
         "/auth/me/profile", json={"display_name": "Öykü"}, headers=auth["headers"]

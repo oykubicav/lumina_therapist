@@ -1,17 +1,14 @@
-// Hesap profilinin cihaz-yerel önbelleği.
+// Onboarding konu listesi ve id → etiket çevirisi.
 //
-// Kaynak doğruluk sunucuda: users.display_name / focus_topics / onboarded_at.
-// Burası yalnızca senkron okuma için kopya tutuyor — ChatWindow karşılama
-// metnini render sırasında kuruyor ve orada await edemiyoruz.
-//
-// Önbellek kaybolursa kimse zarar görmez; useAuth bir sonraki /auth/me
-// yanıtında yeniden yazıyor.
+// Ad, seçilen konular ve "konular anıldı mı" bilgisi sunucuda tutuluyor
+// (users.display_name / focus_topics / focus_greeted_at). Burada yerel
+// kopya yok; tek kaynak useAuth'un döndürdüğü user nesnesi.
 
-import type { AuthUser } from "./types";
-
-const NAME_KEY = "neva_name";
-const FOCUS_KEY = "neva_focus";
-const FOCUS_USED_KEY = "neva_focus_used";
+const LEGACY_NAME_KEY = "neva_name";
+const LEGACY_FOCUS_KEY = "neva_focus";
+const LEGACY_DONE_KEY = "neva_onboarded";
+const LEGACY_USED_KEY = "neva_focus_used";
+const LEGACY_OWNER_KEY = "neva_profile_owner";
 
 export interface FocusOption {
   id: string;
@@ -31,73 +28,41 @@ export const FOCUS_OPTIONS: FocusOption[] = [
   { id: "unsure", label: "Henüz emin değilim" },
 ];
 
-export function getName(): string {
-  if (typeof window === "undefined") return "";
-  return window.localStorage.getItem(NAME_KEY) || "";
-}
-
-export function getFocus(): string[] {
-  if (typeof window === "undefined") return [];
-  const raw = window.localStorage.getItem(FOCUS_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-// Seçilen konular yalnızca ilk karşılamada anılır. Bu bayrak cihaza özel
-// ve kasten sunucuya taşınmadı — kaybolursa en fazla selamlama bir kez
-// daha konulardan bahseder.
-export function getFocusLabels(): string[] {
-  if (typeof window === "undefined") return [];
-  if (window.localStorage.getItem(FOCUS_USED_KEY) === "true") return [];
-  const ids = getFocus();
+/** Seçilen konu id'lerini görünür etiketlere çevirir. "unsure" anılmaz. */
+export function focusLabelsFor(ids: string[] | null | undefined): string[] {
+  if (!ids || ids.length === 0) return [];
   return FOCUS_OPTIONS.filter((o) => ids.includes(o.id) && o.id !== "unsure").map(
     (o) => o.label
   );
 }
 
-export function markFocusUsed(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(FOCUS_USED_KEY, "true");
-}
-
-/** Sunucudan gelen kullanıcıyı önbelleğe yaz. Kullanıcı yoksa temizle. */
-export function cacheProfileFromUser(user: AuthUser | null): void {
-  if (typeof window === "undefined") return;
-  if (!user) {
-    clearProfile();
-    return;
-  }
-  if (user.display_name) {
-    window.localStorage.setItem(NAME_KEY, user.display_name);
-  } else {
-    window.localStorage.removeItem(NAME_KEY);
-  }
-  window.localStorage.setItem(FOCUS_KEY, JSON.stringify(user.focus_topics || []));
-}
-
-export function clearProfile(): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(NAME_KEY);
-  window.localStorage.removeItem(FOCUS_KEY);
-  window.localStorage.removeItem(FOCUS_USED_KEY);
-}
-
 /** Sunucuya geçişten önce cihazda kalmış ad/konu — bir kez yukarı taşınır. */
 export function readLegacyLocalProfile(): { name: string; focus: string[] } | null {
   if (typeof window === "undefined") return null;
-  if (window.localStorage.getItem("neva_onboarded") !== "true") return null;
-  const name = window.localStorage.getItem(NAME_KEY) || "";
-  const focus = getFocus();
+  if (window.localStorage.getItem(LEGACY_DONE_KEY) !== "true") return null;
+
+  const name = window.localStorage.getItem(LEGACY_NAME_KEY) || "";
+  let focus: string[] = [];
+  try {
+    const raw = window.localStorage.getItem(LEGACY_FOCUS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (Array.isArray(parsed)) focus = parsed;
+  } catch {
+    // bozuk kayıt — konu seçimi olmadan devam
+  }
   return { name, focus };
 }
 
-export function clearLegacyMarkers(): void {
+/** Taşıma sonrası eski anahtarları temizle. */
+export function clearProfile(): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem("neva_onboarded");
-  window.localStorage.removeItem("neva_profile_owner");
+  for (const key of [
+    LEGACY_NAME_KEY,
+    LEGACY_FOCUS_KEY,
+    LEGACY_DONE_KEY,
+    LEGACY_USED_KEY,
+    LEGACY_OWNER_KEY,
+  ]) {
+    window.localStorage.removeItem(key);
+  }
 }

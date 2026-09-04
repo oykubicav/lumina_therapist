@@ -119,6 +119,9 @@ class User(Base):
     display_name: Mapped[str | None] = mapped_column(String(60), nullable=True)
     focus_topics: Mapped[list | None] = mapped_column(PortableJSON, nullable=True)
     onboarded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Seçilen konular karşılamada yalnızca bir kez anılır. Cihazda tutulunca
+    # her çıkış-giriş sıfırlanıyor ve aynı cümle tekrar tekrar kuruluyordu.
+    focus_greeted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     sessions: Mapped[list["ChatSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 

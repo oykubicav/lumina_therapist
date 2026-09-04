@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { hasConsent } from "@/lib/consent";
-import { readLegacyLocalProfile, clearLegacyMarkers } from "@/lib/profile";
+import { readLegacyLocalProfile, clearProfile } from "@/lib/profile";
 import ConsentModal from "@/components/ConsentModal";
 import ChatWindow from "@/components/ChatWindow";
 import Landing from "@/components/Landing";
@@ -31,7 +31,7 @@ export default function Page() {
     if (!eski) return;
     updateProfile({ display_name: eski.name, focus_topics: eski.focus })
       .catch(() => {})
-      .finally(clearLegacyMarkers);
+      .finally(clearProfile);
   }, [loading, user, updateProfile]);
 
   useEffect(() => {

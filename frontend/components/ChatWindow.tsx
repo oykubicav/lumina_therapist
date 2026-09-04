@@ -19,7 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LogIn, LogOut, User } from "lucide-react";
 import { History } from "lucide-react";
 import HistoryPanel from "./HistoryPanel";
-import { getName, getFocusLabels, markFocusUsed, clearProfile } from "@/lib/profile";
+import { focusLabelsFor, clearProfile } from "@/lib/profile";
 
 function buildWelcome(name: string, focusLabels: string[]): string {
   const greeting = name ? `Merhaba ${name}.` : "Merhaba, hoş geldin.";
@@ -56,7 +56,7 @@ export default function ChatWindow() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [transparencyTurnId, setTransparencyTurnId] = useState<string | null>(null);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, updateProfile } = useAuth();
 
   useEffect(() => {
     const saved = getSessionId();
@@ -169,8 +169,8 @@ export default function ChatWindow() {
     setHandoffDismissed(false);
     setError(null);
     setWelcome(
-      getName()
-        ? `Yeni bir sayfa açtık ${getName()}. Konuştuklarımız aklımda — bugün kaldığımız yerden devam edebiliriz, istersen başka bir şeyle başlayabilirsin.`
+      user?.display_name
+        ? `Yeni bir sayfa açtık ${user.display_name}. Konuştuklarımız aklımda — bugün kaldığımız yerden devam edebiliriz, istersen başka bir şeyle başlayabilirsin.`
         : "Yeni bir sayfa açtık. Konuştuklarımız aklımda — kaldığımız yerden devam edebiliriz, istersen başka bir şeyle başlayabilirsin."
     );
     textareaRef.current?.focus();
@@ -219,12 +219,21 @@ export default function ChatWindow() {
     setShowBanner(isAuthenticated && shouldPromptNow());
   }, [isAuthenticated]);
 
-  // Onboarding'de seçilen konular yalnızca ilk karşılamada anılır.
+  // Karşılama, kullanıcı bilgisi geldiğinde bir kez kurulur. Ad her sohbette
+  // anılır; onboarding'de seçilen konular yalnızca ilk sohbette — sunucudaki
+  // focus_greeted_at damgası bunu taşıyor.
+  const welcomeBuilt = useRef(false);
   useEffect(() => {
-    const labels = getFocusLabels();
-    setWelcome(buildWelcome(getName(), labels));
-    if (labels.length > 0) markFocusUsed();
-  }, []);
+    if (!user || welcomeBuilt.current) return;
+    welcomeBuilt.current = true;
+
+    const labels = user.focus_greeted_at ? [] : focusLabelsFor(user.focus_topics);
+    setWelcome(buildWelcome(user.display_name ?? "", labels));
+
+    if (labels.length > 0) {
+      void updateProfile({ focus_greeted: true }).catch(() => {});
+    }
+  }, [user, updateProfile]);
 
   return (
     <div className="flex flex-col h-screen max-h-screen bg-cbt-bg dark:bg-cbt-dark-bg">

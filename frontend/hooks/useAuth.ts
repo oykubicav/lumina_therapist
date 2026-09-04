@@ -8,19 +8,13 @@ import {
 } from "@/lib/auth";
 import { postLogin, postRegister, getMe, deleteMe, patchMyProfile, ApiError } from "@/lib/api";
 import { clearSessionId } from "@/lib/session";
-import { cacheProfileFromUser, clearProfile } from "@/lib/profile";
+import { clearProfile } from "@/lib/profile";
 import type { AuthUser, ProfileUpdate } from "@/lib/types";
 
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  // Sunucudaki profil değiştikçe yerel önbelleği eşitle. ChatWindow karşılama
-  // metnini senkron kuruyor, oradan await edemiyoruz.
-  useEffect(() => {
-    cacheProfileFromUser(user);
-  }, [user]);
 
   // Mount olduğunda localStorage'dan restore et
   useEffect(() => {

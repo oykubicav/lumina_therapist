@@ -174,11 +174,13 @@ export interface AuthUser {
   display_name: string | null;
   focus_topics: string[];
   onboarded_at: string | null;
+  focus_greeted_at: string | null;
 }
 
 export interface ProfileUpdate {
   display_name?: string | null;
   focus_topics?: string[];
+  focus_greeted?: boolean;
 }
 
 export interface LoginResponse {

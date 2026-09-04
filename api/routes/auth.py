@@ -56,13 +56,19 @@ class UserView(BaseModel):
     display_name: Optional[str] = None
     focus_topics: list[str] = []
     onboarded_at: Optional[str] = None
+    focus_greeted_at: Optional[str] = None
 
 
 class ProfileUpdate(BaseModel):
-    """Onboarding ekranından gelen tercihler. İkisi de isteğe bağlı —
-    kullanıcı adı boş bırakıp yalnızca konu seçebilir ya da tümünü atlayabilir."""
+    """Onboarding ekranından gelen tercihler. Hepsi isteğe bağlı —
+    kullanıcı adı boş bırakıp yalnızca konu seçebilir ya da tümünü atlayabilir.
+
+    focus_greeted: karşılamada konular anıldığında bir kez True gönderilir,
+    sonraki sohbetlerde aynı cümle kurulmasın diye.
+    """
     display_name: Optional[str] = Field(None, max_length=60)
     focus_topics: Optional[list[str]] = Field(None, max_length=10)
+    focus_greeted: Optional[bool] = None
 class TokenResponse(BaseModel):
     access_token:str
     token_type:str = "bearer"
@@ -123,6 +129,7 @@ def _to_user_view(user: User) -> UserView:
         display_name=user.display_name,
         focus_topics=user.focus_topics or [],
         onboarded_at=_iso_utc(user.onboarded_at),
+        focus_greeted_at=_iso_utc(user.focus_greeted_at),
     )
 
 
@@ -275,6 +282,10 @@ async def update_my_profile(
 
         if req.focus_topics is not None:
             row.focus_topics = [t for t in req.focus_topics if t in _FOCUS_IDS]
+
+        # Bir kez damgalanır; sonraki istekler tarihi ileri taşımaz.
+        if req.focus_greeted and row.focus_greeted_at is None:
+            row.focus_greeted_at = datetime.now(timezone.utc)
 
         if row.onboarded_at is None:
             row.onboarded_at = datetime.now(timezone.utc)
