@@ -1,6 +1,16 @@
 """Cards + ontology + registry → Neo4j graph.
-Kullanım: python -m graph.migrate
+
+Kullanım:
+    python -m graph.migrate            # ekle/güncelle (MERGE, idempotent)
+    python -m graph.migrate --reset    # önce grafı boşalt, sonra baştan yükle
+
+--reset neden gerekiyor: bütün yazmalar ON CREATE SET, yani var olan düğümlerin
+özellikleri güncellenmiyor ve kaldırılmış ilişkiler grafta kalıyor. Kaynak dosya
+değiştiğinde (kart silinmesi, kavramın hedef kartının değişmesi gibi) graf ile
+JSONL arasında sessiz sürüklenme oluşuyor. --reset grafı dosyaların birebir
+yansıması haline getiriyor.
 """
+import argparse
 import csv
 import json
 import re
@@ -348,8 +358,34 @@ def print_counts(session):
     """).data():
         print(f"  {r['rel']:25s} {r['n']}")
 
+def wipe_graph(session):
+    """Bütün düğümleri ve ilişkileri sil. Kısıt/indeksler korunur.
+
+    Graf tamamen kaynak dosyalardan üretiliyor — burada başka yerde olmayan
+    hiçbir veri yok, o yüzden silmek kayıpsız.
+    """
+    before = session.run("MATCH (n) RETURN count(n) AS n").single()["n"]
+    while True:
+        deleted = session.run("""
+            MATCH (n) WITH n LIMIT 10000
+            DETACH DELETE n
+            RETURN count(n) AS n
+        """).single()["n"]
+        if deleted == 0:
+            break
+    print(f"Wiped: {before} nodes removed")
+
+
 # Main
 def main():
+    parser = argparse.ArgumentParser(description="Kartlar ve ontolojiyi Neo4j'ye yükle.")
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Yüklemeden önce grafı tamamen boşalt (dosyalarla birebir eşitle).",
+    )
+    args = parser.parse_args()
+
     cards = [json.loads(l) for l in open(config.CARDS_PATH, encoding="utf-8")]
     safety_cards = [json.loads(l) for l in open(config.SAFETY_CARDS_PATH, encoding="utf-8")]
     ontology = json.load(open(config.ONTOLOGY_PATH, encoding="utf-8"))
@@ -361,6 +397,8 @@ def main():
     driver = get_driver()
     try:
         with driver.session() as session:
+            if args.reset:
+                wipe_graph(session)
             create_schema(session)
             load_sources(session, sources)
             load_cards(session, cards)
