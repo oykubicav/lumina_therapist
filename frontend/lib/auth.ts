@@ -39,3 +39,35 @@ export function setStoredUser(user: AuthUser): void {
 export function isAuthenticated(): boolean {
   return getToken() !== null;
 }
+
+/** JWT payload'undaki exp (saniye). Okunamazsa null.
+ *
+ * İmza DOĞRULANMIYOR ve doğrulanamaz — gizli anahtar sunucuda. Bu yalnızca
+ * bir arayüz ipucu: süresi geçmiş token'la sunucuya gidip 401 beklemek
+ * yerine kullanıcıyı hemen çıkışa alabilmek için. Yetki kararını her zaman
+ * sunucu veriyor.
+ */
+export function getTokenExpiry(): number | null {
+  const token = getToken();
+  if (!token) return null;
+
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+
+  try {
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded));
+    return typeof payload.exp === "number" ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Token'ın süresi dolmuş mu? Okunamayan token'a "dolmuş" demiyoruz —
+ * kararı sunucuya bırakıyoruz. */
+export function isTokenExpired(): boolean {
+  const exp = getTokenExpiry();
+  if (exp === null) return false;
+  return exp * 1000 <= Date.now();
+}

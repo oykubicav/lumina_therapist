@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   getToken, setToken, clearToken,
-  getStoredUser, setStoredUser,
+  getStoredUser, setStoredUser, isTokenExpired,
 } from "@/lib/auth";
 import { postLogin, postRegister, getMe, deleteMe, patchMyProfile, ApiError } from "@/lib/api";
 import { clearSessionId } from "@/lib/session";
@@ -18,27 +18,55 @@ export function useAuth() {
 
   // Mount olduğunda localStorage'dan restore et
   useEffect(() => {
-    const stored = getStoredUser();
-    if (stored && getToken()) {
-      setUser(stored);
-      // Arka planda backend'den taze user info çek (verify token hala geçerli mi)
-      getMe()
-        .then((fresh) => {
-          setUser(fresh);
-          setStoredUser(fresh);
-        })
-        .catch((err) => {
-          // Yalnızca kimlik doğrulama hatası çıkış yaptırır. Render ücretsiz
-          // katmanda uykudan kalkarken istek zaman aşımına uğrayabiliyor;
-          // bunu "token geçersiz" saymak kullanıcıyı sessizce düşürüyordu.
-          if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-            clearToken();
-            setUser(null);
-          }
-        });
+    if (!getToken()) {
+      setLoading(false);
+      return;
     }
+
+    // Süre dolmuşsa sunucuya sormaya gerek yok — exp token'ın içinde.
+    // Ağ erişimi olmasa bile kesin biliyoruz.
+    if (isTokenExpired()) {
+      clearToken();
+      setLoading(false);
+      return;
+    }
+
+    // Önbellek varsa ilk render'da giriş yapılmış görünsün; yoksa da token
+    // geçerli olduğu için doğrulayıp kullanıcıyı doldururuz.
+    const stored = getStoredUser();
+    if (stored) setUser(stored);
+
+    getMe()
+      .then((fresh) => {
+        setUser(fresh);
+        setStoredUser(fresh);
+      })
+      .catch((err) => {
+        // Yalnızca kimlik doğrulama hatası çıkış yaptırır. Render ücretsiz
+        // katmanda uykudan kalkarken istek zaman aşımına uğrayabiliyor;
+        // bunu "token geçersiz" saymak kullanıcıyı sessizce düşürüyordu.
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          clearToken();
+          setUser(null);
+        }
+      });
+
     setLoading(false);
   }, []);
+  // Sekme uzun süre açık kalırsa süre içeride dolabiliyor. Dakikada bir
+  // bakıp kullanıcıyı çıkışa alıyoruz; aksi halde her işlem sessizce 401
+  // alır ve neden olduğu görünmez.
+  useEffect(() => {
+    if (!user) return;
+    const timer = setInterval(() => {
+      if (isTokenExpired()) {
+        clearToken();
+        setUser(null);
+      }
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, [user]);
+
   const login = useCallback(async (email: string, password: string) => {
     const response = await postLogin(email, password);
     setToken(response.access_token);
