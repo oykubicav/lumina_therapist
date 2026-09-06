@@ -279,9 +279,7 @@ export default function ChatWindow() {
             </IconButton>
             {isAuthenticated ? (
   <div className="flex items-center gap-2">
-    <span className="text-xs text-cbt-textSecondary hidden sm:inline">
-      {user?.email}
-    </span>
+    
     <IconButton label="Hesabım" href="/hesabim">
       <User size={16} strokeWidth={2.2} />
     </IconButton>
