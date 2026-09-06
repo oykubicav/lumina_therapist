@@ -16,8 +16,10 @@ import type {
   SessionListResponse,
   SessionDetail,
   ProfileUpdate,
-
-
+  ThemeCount,
+  CopingItem,
+  InsightsResponse,
+  DeviceView,
 } from "./types";
 import { getAccessToken, setAccessToken, clearAccessToken } from "./auth";
 
@@ -351,5 +353,38 @@ export async function postLogoutAll(): Promise<{
   return fetchJson("/auth/logout-all", {
     method: "POST",
     headers: CLIENT_HEADER,
+  });
+}
+
+export async function getMyInsights(): Promise<InsightsResponse> {
+  return fetchJson<InsightsResponse>("/auth/me/insights");
+}
+
+export async function deleteMyInsights(): Promise<{ status: string }> {
+  return fetchJson<{ status: string }>("/auth/me/insights", { method: "DELETE" });
+}
+
+export async function getMyDevices(): Promise<DeviceView[]> {
+  return fetchJson<DeviceView[]>("/auth/devices");
+}
+
+export async function revokeDevice(id: string): Promise<{ status: string }> {
+  return fetchJson(`/auth/devices/${id}`, {
+    method: "DELETE",
+    headers: CLIENT_HEADER,
+  });
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ status: string; access_token: string }> {
+  return fetchJson("/auth/me/password", {
+    method: "POST",
+    headers: CLIENT_HEADER,
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
   });
 }

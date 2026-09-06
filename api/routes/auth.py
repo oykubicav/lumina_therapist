@@ -272,7 +272,32 @@ _FOCUS_IDS = {
     "relationships", "loss", "change", "panic", "unsure",
 }
 
-
+# graph/migrate.py'deki TECHNIQUE_PATTERNS ile aynı id'ler. Kullanıcıya
+# "thought_record" göstermek anlamsız.
+_TECHNIQUE_LABELS = {
+    "thought_record": "Düşünce kaydı",
+    "cognitive_reframing": "Düşünceyi yeniden değerlendirme",
+    "behavioural_activation": "Davranışsal aktivasyon",
+    "exposure_gradual": "Kademeli maruz kalma",
+    "interoceptive_exposure": "Bedensel duyuma alışma",
+    "grounding": "Anı yakalama (grounding)",
+    "diaphragm_breathing": "Diyafram nefesi",
+    "progressive_muscle_relaxation": "Aşamalı kas gevşetme",
+    "worry_time": "Endişe zamanı",
+    "problem_solving": "Adım adım problem çözme",
+    "self_compassion": "Öz-şefkat",
+    "assertiveness": "Sınır koyma ve hayır diyebilme",
+    "four_horsemen_antidotes": "İlişkide yıpratıcı kalıpları fark etme",
+    "repair_attempt": "Tartışma sonrası onarım",
+    "continuing_bonds": "Bağı sürdürme",
+    "stimulus_control": "Uyaran kontrolü",
+    "sleep_restriction": "Uyku kısıtlaması",
+    "sleep_hygiene": "Uyku hijyeni",
+    "values_clarification": "Değer haritası",
+    "job_crafting": "İşi yeniden şekillendirme",
+    "boundary_setting": "Sınır koyma",
+    "microbreak": "Mikro molalar",
+}
 @router.patch("/me/profile", response_model=UserView)
 async def update_my_profile(
     req: ProfileUpdate,
@@ -582,3 +607,239 @@ async def logout_all(
 
     clear_refresh_cookie(response)
     return {"status": "logged_out_all", "sessions_closed": kapanan}
+
+
+class ThemeCount(BaseModel):
+    label: str
+    sessions: int
+
+
+class CopingItem(BaseModel):
+    technique: str
+    label: str
+    verdict: str          # yararlı | yararsız | denenmedi | deneyecek
+
+
+class InsightsResponse(BaseModel):
+    themes: list[ThemeCount]
+    coping: list[CopingItem]
+    triggers: list[str]
+    session_count: int
+    first_session_at: Optional[str] = None
+
+@router.get("/me/insights", response_model=InsightsResponse)
+async def my_insights(
+    user: User = Depends(get_current_user),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Konuşmalardan çıkarılmış sinyallerin hesap düzeyinde toplanmış hali.
+
+    UserProfile oturum başına tutuluyor; burada kullanıcının bütün
+    oturumlarındaki satırlar birleştiriliyor. Ayrı bir tablo açmak yerine
+    okuma anında topluyoruz — veri zaten orada ve hacim küçük.
+
+    progress_notes bilerek dışarıda: klinisyen sesiyle yazılmış notlar
+    ("... bildirdi") kullanıcıya dosya gibi görünüyor.
+    """
+    from api.db.models import UserProfile
+
+    factory = store._SessionLocal()
+    with factory() as db:
+        rows = db.execute(
+            select(UserProfile)
+            .join(ChatSession, UserProfile.session_id == ChatSession.id)
+            .where(ChatSession.user_id == user.id)
+        ).scalars().all()
+
+        ilk = db.execute(
+            select(sqlfunc.min(ChatSession.created_at)).where(
+                ChatSession.user_id == user.id
+            )
+        ).scalar_one_or_none()
+
+        tema_sayaci: dict[str, int] = {}
+        coping: dict[str, str] = {}
+        tetikleyici: list[str] = []
+
+        for r in rows:
+            for t in (r.themes or []):
+                tema_sayaci[t] = tema_sayaci.get(t, 0) + 1
+            # Sonraki oturum öncekini eziyor: en güncel değerlendirme geçerli.
+            for teknik, karar in (r.coping_tried or {}).items():
+                coping[teknik] = karar
+            for tg in (r.triggers or []):
+                if tg not in tetikleyici:
+                    tetikleyici.append(tg)
+
+    temalar = [
+        ThemeCount(label=k, sessions=v)
+        for k, v in sorted(tema_sayaci.items(), key=lambda x: (-x[1], x[0]))
+    ]
+    teknikler = [
+        CopingItem(
+            technique=k,
+            label=_TECHNIQUE_LABELS.get(k, k.replace("_", " ")),
+            verdict=v,
+        )
+        for k, v in sorted(coping.items())
+    ]
+
+    return InsightsResponse(
+        themes=temalar,
+        coping=teknikler,
+        triggers=tetikleyici[:20],
+        session_count=len(rows),
+        first_session_at=_iso_utc(ilk),
+    )
+
+
+@router.delete("/me/insights")
+async def delete_my_insights(
+    user: User = Depends(get_current_user),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Çıkarılmış sinyalleri siler, sohbetlere dokunmaz.
+
+    KVKK açısından gerekli: kullanıcı hakkında çıkarım yapıyorsak onu
+    silebilmesi de gerekiyor. Sohbetin kendisi ayrı bir karar.
+    """
+    from api.db.models import UserProfile
+
+    factory = store._SessionLocal()
+    with factory() as db, db.begin():
+        rows = db.execute(
+            select(UserProfile)
+            .join(ChatSession, UserProfile.session_id == ChatSession.id)
+            .where(ChatSession.user_id == user.id)
+        ).scalars().all()
+        for r in rows:
+            r.themes = None
+            r.triggers = None
+            r.coping_tried = None
+            r.progress_notes = None
+            r.last_summary = None
+
+    return {"status": "cleared", "profiles": len(rows)}
+
+class DeviceView(BaseModel):
+    id: str
+    user_agent: Optional[str] = None
+    created_at: str
+    last_used_at: Optional[str] = None
+    current: bool
+
+@router.get("/devices", response_model=list[DeviceView])
+async def my_devices(
+    request: Request,
+    user: User = Depends(get_current_user),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Açık oturumlar. Hangisinin bu cihaz olduğu çerezden anlaşılıyor.
+
+    "Bu cihaz" işaretlemesi olmadan "tüm cihazlardan çık" düğmesi korkutucu
+    oluyor — kullanıcı kendini de atacağını bilmiyor.
+    """
+    from api.db.models import RefreshToken
+
+    raw = get_refresh_cookie(request)
+    su_anki_hash = rt.hash_token(raw) if raw else None
+
+    factory = store._SessionLocal()
+    with factory() as db:
+        rows = db.execute(
+            select(RefreshToken)
+            .where(
+                RefreshToken.user_id == user.id,
+                RefreshToken.revoked_at.is_(None),
+            )
+            .order_by(RefreshToken.created_at.desc())
+        ).scalars().all()
+
+        return [
+            DeviceView(
+                id=str(r.id),
+                user_agent=r.user_agent,
+                created_at=_iso_utc(r.created_at),
+                last_used_at=_iso_utc(r.last_used_at),
+                current=(r.token_hash == su_anki_hash),
+            )
+            for r in rows
+        ]
+
+
+@router.delete("/devices/{device_id}")
+async def revoke_device(
+    device_id: str,
+    user: User = Depends(get_current_user),
+    _: None = Depends(require_client_header),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Tek bir cihazın oturumunu kapat."""
+    from api.db.models import RefreshToken
+
+    try:
+        did = uuid.UUID(device_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=404, detail="Cihaz bulunamadı")
+
+    factory = store._SessionLocal()
+    with factory() as db, db.begin():
+        row = db.get(RefreshToken, did)
+        # Sahiplik kontrolü: başkasının oturumunu kapatamamalı. 403 değil 404,
+        # id denemesiyle başkasının cihaz sayısı çıkarılmasın.
+        if row is None or row.user_id != user.id:
+            raise HTTPException(status_code=404, detail="Cihaz bulunamadı")
+        if row.revoked_at is None:
+            row.revoked_at = rt._now()
+
+    return {"status": "revoked"}
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+
+@router.post("/me/password")
+async def change_password(
+    req: PasswordChange,
+    request: Request,
+    response: Response,
+    user: User = Depends(get_current_user),
+    _: None = Depends(require_client_header),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Giriş yapmış kullanıcının şifresini değiştirir.
+
+    Mevcut şifre isteniyor: access token çalınmış olabilir, onunla şifre
+    değiştirilip hesap tamamen ele geçirilmesin.
+
+    Değişiklikten sonra diğer bütün oturumlar kapanıyor. Şifre değiştirmenin
+    en yaygın sebebi "hesabıma birinin eriştiğinden şüpheleniyorum" —
+    o kişinin oturumu açık kalırsa işlem anlamsız olur.
+    """
+    factory = store._SessionLocal()
+    with factory() as db, db.begin():
+        row = db.get(User, user.id)
+        if row is None:
+            raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+
+        if not verify_password(req.current_password, row.password_hash):
+            raise HTTPException(status_code=401, detail="Mevcut şifren hatalı")
+
+        if req.current_password == req.new_password:
+            raise HTTPException(
+                status_code=400, detail="Yeni şifre eskisiyle aynı olamaz"
+            )
+
+        row.password_hash = hash_password(req.new_password)
+
+        # Diğer cihazları düşür, bu cihaza yeni bir oturum aç. Kullanıcı
+        # kendi tarayıcısından atılmasın ama başkaları çıksın.
+        rt.revoke_all_for_user(db, row.id)
+        yeni_refresh = rt.issue(
+            db, row.id, user_agent=request.headers.get("user-agent")
+        )
+        yeni_access = encode_token(row.id)
+
+    set_refresh_cookie(response, yeni_refresh)
+    return {"status": "changed", "access_token": yeni_access}

@@ -282,6 +282,9 @@ export default function ChatWindow() {
     <span className="text-xs text-cbt-textSecondary hidden sm:inline">
       {user?.email}
     </span>
+    <IconButton label="Hesabım" href="/hesabim">
+      <User size={16} strokeWidth={2.2} />
+    </IconButton>
     <IconButton label="Çıkış yap" onClick={() => {
       logout();
     }}>

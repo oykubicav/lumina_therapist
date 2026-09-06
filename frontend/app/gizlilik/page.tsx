@@ -18,13 +18,29 @@ export default function GizlilikPage() {
           ilişkilendirilebilecek hiçbir bilgi istenmiyor; oturumun tarayıcında
           tutulan geçici bir kimlikle yürüyor.
         </p>
+        <p>
+          Karşılığında sohbetlerin saklanmıyor — bir sonraki gelişinde
+          sıfırdan başlıyorsun. Hangisinin sana uygun olduğuna sen karar
+          ver; ikisi de tam olarak çalışıyor.
+        </p>
       </Block>
 
-      <Block heading="Mesajların">
+      <Block heading="Mesajların ne kadar kalıyor">
         <p>
-          Yazdığın mesajların ham hâli kalıcı olarak saklanmıyor. Sohbetin
-          tutarlı ilerleyebilmesi için oturum süresince geçici olarak tutuluyor,
-          sonrasında siliniyor.
+          Bu, hesabının olup olmamasına göre değişiyor ve ikisini ayrı ayrı
+          anlatmak istiyoruz.
+        </p>
+        <p>
+          <strong>Üyeliksiz kullanırsan</strong> mesajların yalnızca sohbetin
+          sürdüğü kadar tutuluyor. Yaklaşık bir saat işlem yapılmazsa oturum ve
+          içindeki bütün mesajlar otomatik olarak siliniyor. Geri getirilemez.
+        </p>
+        <p>
+          <strong>Hesabın varsa</strong> sohbetlerin sen silene kadar
+          saklanıyor. Bunu sen istediğin için yapıyoruz: eski konuşmalarına
+          dönebilmen, kaldığın yerden devam edebilmen ve zaman içindeki
+          değişimi görebilmen bunu gerektiriyor. Otomatik bir silme süresi
+          yok — karar sende.
         </p>
         <p>
           Sistem kayıtlarına mesaj içeriği yazılmıyor. Kayıtlarda yalnızca
@@ -35,25 +51,48 @@ export default function GizlilikPage() {
 
       <Block heading="Hesap açarsan">
         <p>
-          Hesap açtığında e-posta adresin ve şifrenin şifrelenmiş özeti
-          saklanıyor. Şifrenin kendisi hiçbir yerde açık biçimde tutulmuyor.
+          E-posta adresin ve şifrenin şifrelenmiş özeti saklanıyor. Şifrenin
+          kendisi hiçbir yerde açık biçimde tutulmuyor.
         </p>
         <p>
           Ölçüm yaptıysan sonuçların hesabınla ilişkilendiriliyor — zaman
-          içindeki değişimi görebilmen için. Bu veriyi istediğin an
-          silebilirsin.
+          içindeki değişimi görebilmen için.
+        </p>
+        <p>
+          Konuşmalarından bazı sinyaller çıkarılıyor: tekrar eden konular,
+          denediğin teknikler ve bunların sana iyi gelip gelmediği. Bunlar
+          Neva&apos;nın seni hatırlaması içindir, bir değerlendirme ya da tanı
+          değildir ve yanılabilirler. Ne çıkarıldığını Gelişimim sayfasından
+          görebilir, tek tuşla silebilirsin — sohbetlerin yerinde kalır.
         </p>
       </Block>
 
       <Block heading="Silme hakkı">
         <p>
-          Sohbet ekranındaki çöp kutusu simgesiyle oturumunu ve mesajlarını
-          anında silebilirsin.
+          Sohbetlerini tek tek silebilirsin: sohbet listesindeki çöp kutusu
+          simgesi o konuşmayı ve içindeki bütün mesajları kaldırır.
         </p>
         <p>
-          Hesabını silmek istersen, hesabına bağlı her şey — oturumlar,
-          mesajlar, ölçüm sonuçları — birlikte siliniyor. Bu işlem geri
-          alınamıyor.
+          Konuşmalardan çıkarılan notları ayrıca silebilirsin; bunun için
+          sohbetlerinden vazgeçmen gerekmiyor.
+        </p>
+        <p>
+          Hesabını silersen hesabına bağlı her şey — sohbetler, mesajlar,
+          ölçüm sonuçları, çıkarılan notlar ve açık oturumlar — birlikte
+          siliniyor. Bu işlem geri alınamıyor.
+        </p>
+      </Block>
+
+      <Block heading="Oturum güvenliği">
+        <p>
+          Giriş yaptığında tarayıcına, JavaScript&apos;in okuyamadığı bir
+          oturum çerezi bırakılıyor. Bu, sitede bir açık olsa bile oturumunun
+          çalınmasını zorlaştırıyor.
+        </p>
+        <p>
+          Hesabım sayfasından açık oturumlarını görebilir, tanımadığın bir
+          cihazı kapatabilir ya da tek seferde hepsinden çıkabilirsin. Şifreni
+          değiştirdiğinde diğer cihazlardaki oturumlar kendiliğinden kapanıyor.
         </p>
       </Block>
 

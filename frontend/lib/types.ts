@@ -217,3 +217,29 @@ export interface SessionDetail {
   turns: SessionTurnView[];
 }
 
+export interface ThemeCount {
+  label: string;
+  sessions: number;
+}
+
+export interface CopingItem {
+  technique: string;
+  label: string;
+  verdict: string;
+}
+
+export interface InsightsResponse {
+  themes: ThemeCount[];
+  coping: CopingItem[];
+  triggers: string[];
+  session_count: number;
+  first_session_at: string | null;
+}
+
+export interface DeviceView {
+  id: string;
+  user_agent: string | null;
+  created_at: string;
+  last_used_at: string | null;
+  current: boolean;
+}

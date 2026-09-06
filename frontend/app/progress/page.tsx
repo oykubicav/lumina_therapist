@@ -9,8 +9,11 @@ import ConsentModal from "@/components/ConsentModal";
 import AssessmentTrend from "@/components/AssessmentTrend";
 import AssessmentModal from "@/components/AssessmentModal";
 import type { AssessmentKind } from "@/lib/types";
+import InsightsPanel from "@/components/InsightsPanel";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ProgressPage() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [needsConsent, setNeedsConsent] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -106,6 +109,43 @@ export default function ProgressPage() {
             </div>
           )}
         </div>
+        {!authLoading && (isAuthenticated ? (
+          <section className="mt-8 bg-cbt-surface dark:bg-cbt-dark-surface rounded-2xl border border-cbt-border/60 dark:border-cbt-dark-border/60 p-7">
+            <h2 className="text-[15px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-1">
+              Konuşmalarımızdan
+            </h2>
+            <p className="text-[13px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary mb-6 leading-relaxed">
+              Sohbetlerde tekrar eden konular ve denediğin teknikler.
+            </p>
+            <InsightsPanel />
+          </section>
+        ) : (
+          <section className="mt-8 rounded-2xl border border-dashed border-cbt-border dark:border-cbt-dark-border p-7">
+            <h2 className="text-[15px] font-semibold tracking-tight text-cbt-text dark:text-cbt-dark-text mb-2">
+              Konuşmalarımızdan
+            </h2>
+            <p className="text-[13px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary leading-relaxed mb-5">
+              Hesabın olursa sohbetlerde tekrar eden konuları ve hangi
+              tekniklerin sende işe yaradığını burada biriktirebiliriz.
+              Üyeliksiz kullanımda sohbetler bir saat sonra siliniyor, o yüzden
+              biriktirecek bir şey kalmıyor.
+            </p>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center px-5 h-10 rounded-xl bg-cbt-text dark:bg-cbt-dark-text text-cbt-bg dark:text-cbt-dark-bg text-[14px] font-medium hover:opacity-85 transition-opacity"
+              >
+                Hesap oluştur
+              </Link>
+              <Link
+                href="/login"
+                className="text-[13px] text-cbt-textSecondary dark:text-cbt-dark-textSecondary hover:text-cbt-text dark:hover:text-cbt-dark-text transition-colors"
+              >
+                Zaten hesabım var
+              </Link>
+            </div>
+          </section>
+        ))}
 
         <p className="mt-6 text-[12px] text-cbt-textMuted dark:text-cbt-dark-textMuted leading-relaxed text-center max-w-md mx-auto">
           Bu ölçekler tanı koymaz; yaygın kullanılan tarama araçlarıdır ve

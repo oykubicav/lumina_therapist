@@ -11,11 +11,23 @@ Public interface preserved:
     delete(session_id) -> bool
     size() -> int
 
-KVKK:
-- user_message stored EPHEMERALLY. Rows purged when session TTL expires,
-  or explicitly on DELETE /chat/session/{id}. Retention column allows
-  a scheduled job to null out user_message ahead of full row deletion.
-- user_hash retained for audit / dedup even after user_message is purged.
+KVKK — saklama süresi kullanıcının kayıtlı olup olmamasına göre değişiyor:
+
+- Anonim oturumlar: user_message geçici. _gc_expired() TTL dolan oturumları
+  siliyor (varsayılan 1 saat), turn'ler cascade ile gidiyor. Turn satırında
+  retention_ends_at doluyor.
+
+- Kayıtlı kullanıcı oturumları: kullanıcı silene kadar duruyor. Geçmiş
+  özelliği bunu gerektiriyor — bir saatte silinen sohbetin listelenecek hâli
+  yok. Bu satırlarda retention_ends_at None kalıyor ve _gc_expired() onlara
+  dokunmuyor. Silme yolları: DELETE /auth/sessions/{id} (tek sohbet),
+  DELETE /auth/me (hesap ve bağlı her şey).
+
+- user_hash her iki durumda da tutuluyor; user_message temizlense bile
+  denetim ve tekrar tespiti için gerekli.
+
+Bu ayrım /gizlilik sayfasında da anlatılıyor; biri değişirse diğeri de
+değişmeli.
 """
 
 from __future__ import annotations
