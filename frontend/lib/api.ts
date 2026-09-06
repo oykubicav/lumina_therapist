@@ -72,18 +72,22 @@ async function refreshAccessToken(): Promise<boolean> {
 
   return refreshInFlight;
 }
-
 async function rawFetch(path: string, init?: RequestInit): Promise<Response> {
   const token = getAccessToken();
-  return fetch(`${API_BASE}${path}`, {
-    ...init,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers || {}),
-    },
-  });
+  try {
+    return await fetch(`${API_BASE}${path}`, {
+      ...init,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(init?.headers || {}),
+      },
+    });
+  } catch {
+    // Ağ kopması, DNS hatası, CORS reddi. Tarayıcı ayrıntı vermiyor.
+    throw new ApiError(0, "");
+  }
 }
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   let res = await rawFetch(path, init);
@@ -106,9 +110,44 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
 
 
 
+// Durum koduna göre yedek mesajlar. Sunucu anlamlı bir `detail` gönderdiyse
+// o kullanılıyor; buradakiler yalnızca gövde boş ya da teknik olduğunda.
+const HATA_MESAJLARI: Record<number, string> = {
+  0: "Bağlantı kurulamadı. İnternetini kontrol edip tekrar dener misin?",
+  400: "İstek geçersiz görünüyor.",
+  401: "Oturumun sona ermiş. Tekrar giriş yapman gerekiyor.",
+  403: "Bu işlem için yetkin yok.",
+  404: "Aradığın şey bulunamadı.",
+  409: "Bir çakışma oldu, tekrar dener misin?",
+  422: "Girdiğin bilgilerde bir sorun var.",
+  429: "Çok hızlı gittik. Biraz bekleyip tekrar dener misin?",
+  500: "Sunucuda bir hata oluştu. Birazdan tekrar dener misin?",
+  502: "Sunucuya ulaşılamıyor. Birazdan tekrar dener misin?",
+  503: "Servis şu an yanıt vermiyor. Birazdan tekrar dener misin?",
+  504: "Sunucu yanıt vermedi. Birazdan tekrar dener misin?",
+};
+
+function kullaniciMesaji(status: number, body: string): string {
+  try {
+    const parsed = JSON.parse(body);
+    const detail = parsed?.detail;
+    // FastAPI'nin HTTPException'ları Türkçe ve kullanıcıya yönelik yazılmış,
+    // doğrudan gösterilebilir.
+    if (typeof detail === "string" && detail.trim()) return detail;
+    // Pydantic doğrulama hataları dizi döner ve teknik — gösterilmez.
+    if (Array.isArray(detail)) return HATA_MESAJLARI[422];
+  } catch {
+    // Gövde JSON değil (proxy hatası, boş yanıt) — yedeğe düş.
+  }
+  return HATA_MESAJLARI[status] ?? "Beklenmedik bir hata oldu. Tekrar dener misin?";
+}
+
 export class ApiError extends Error {
   constructor(public status: number, public body: string) {
-    super(`API ${status}: ${body.slice(0, 200)}`);
+    // message artık kullanıcıya gösterilebilir. Ham gövde `body`'de, durum
+    // kodu `status`'ta duruyor — hata ayıklarken oradan bakılıyor.
+    super(kullaniciMesaji(status, body));
+    this.name = "ApiError";
   }
 }
 export interface ConsentResponse {
