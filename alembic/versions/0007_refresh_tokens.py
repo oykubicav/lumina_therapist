@@ -13,6 +13,11 @@ Revises: 0006_focus_greeted
 from alembic import op
 import sqlalchemy as sa
 
+# GUID modelden geliyor: Postgres'te UUID, SQLite'ta CHAR(36) oluyor.
+# Ham CHAR(36) yazmak Postgres'te users.id (UUID) ile foreign key
+# kurulmasını engelliyor — tipler uyuşmuyor.
+from api.db.models import GUID
+
 
 revision = "0007_refresh_tokens"
 down_revision = "0006_focus_greeted"
@@ -23,10 +28,10 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "refresh_tokens",
-        sa.Column("id", sa.CHAR(36), primary_key=True),
+        sa.Column("id", GUID(), primary_key=True),
         sa.Column(
             "user_id",
-            sa.CHAR(36),
+            GUID(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
@@ -39,7 +44,7 @@ def upgrade() -> None:
         ),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("revoked_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("replaced_by", sa.CHAR(36), nullable=True),
+        sa.Column("replaced_by", GUID(), nullable=True),
         sa.Column("user_agent", sa.String(200), nullable=True),
         sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True),
     )
