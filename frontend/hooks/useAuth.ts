@@ -2,101 +2,116 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { setAccessToken, clearAccessToken } from "@/lib/auth";
 import {
-  getToken, setToken, clearToken,
-  getStoredUser, setStoredUser, isTokenExpired,
-} from "@/lib/auth";
-import { postLogin, postRegister, getMe, deleteMe, patchMyProfile, ApiError } from "@/lib/api";
+  postLogin, postRegister, deleteMe, patchMyProfile,
+  postLogout, postLogoutAll, setSessionLostHandler,
+} from "@/lib/api";
 import { clearSessionId } from "@/lib/session";
 import { clearProfile } from "@/lib/profile";
 import type { AuthUser, ProfileUpdate } from "@/lib/types";
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Mount olduğunda localStorage'dan restore et
+  // Açılışta bellekte token yok — sayfa yenilenince kayboluyor. httpOnly
+  // refresh çerezi varsa /auth/refresh hem yeni token'ı hem kullanıcıyı
+  // veriyor, yoksa 401 gelir ve anonim devam ederiz.
   useEffect(() => {
-    if (!getToken()) {
-      setLoading(false);
-      return;
-    }
+    let iptal = false;
 
-    // Süre dolmuşsa sunucuya sormaya gerek yok — exp token'ın içinde.
-    // Ağ erişimi olmasa bile kesin biliyoruz.
-    if (isTokenExpired()) {
-      clearToken();
-      setLoading(false);
-      return;
-    }
-
-    // Önbellek varsa ilk render'da giriş yapılmış görünsün; yoksa da token
-    // geçerli olduğu için doğrulayıp kullanıcıyı doldururuz.
-    const stored = getStoredUser();
-    if (stored) setUser(stored);
-
-    getMe()
-      .then((fresh) => {
-        setUser(fresh);
-        setStoredUser(fresh);
-      })
-      .catch((err) => {
-        // Yalnızca kimlik doğrulama hatası çıkış yaptırır. Render ücretsiz
-        // katmanda uykudan kalkarken istek zaman aşımına uğrayabiliyor;
-        // bunu "token geçersiz" saymak kullanıcıyı sessizce düşürüyordu.
-        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-          clearToken();
-          setUser(null);
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Neva-Client": "web",
+          },
+        });
+        if (!iptal && res.ok) {
+          const data = await res.json();
+          setAccessToken(data.access_token);
+          setUser(data.user);
         }
-      });
-
-    setLoading(false);
-  }, []);
-  // Sekme uzun süre açık kalırsa süre içeride dolabiliyor. Dakikada bir
-  // bakıp kullanıcıyı çıkışa alıyoruz; aksi halde her işlem sessizce 401
-  // alır ve neden olduğu görünmez.
-  useEffect(() => {
-    if (!user) return;
-    const timer = setInterval(() => {
-      if (isTokenExpired()) {
-        clearToken();
-        setUser(null);
+      } catch {
+        // Ağ hatası — anonim başlıyoruz, kullanıcı tekrar girebilir.
+      } finally {
+        if (!iptal) setLoading(false);
       }
-    }, 60_000);
-    return () => clearInterval(timer);
-  }, [user]);
+    })();
+
+    return () => {
+      iptal = true;
+    };
+  }, []);
+
+  // fetchJson bir bileşen değil, hook'lara erişemiyor. Yenileme kalıcı
+  // olarak başarısız olduğunda bizi buradan haberdar ediyor.
+  useEffect(() => {
+    setSessionLostHandler(() => {
+      clearAccessToken();
+      setUser(null);
+    });
+    return () => setSessionLostHandler(null);
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await postLogin(email, password);
-    setToken(response.access_token);
-    setStoredUser(response.user);
+    setAccessToken(response.access_token);
     setUser(response.user);
-    clearSessionId(); // Yeni login olduğunda session resetlenir
+    clearSessionId();
   }, []);
+
   const register = useCallback(async (email: string, password: string) => {
-  return await postRegister(email, password);   // caller kullanmak isterse
-}, []);
-const logout = useCallback(() => {
-    clearToken();
+    return await postRegister(email, password);
+  }, []);
+
+  const logout = useCallback(async () => {
+    // Sunucuya haber ver: refresh token iptal edilsin. Yalnızca tarayıcıyı
+    // temizlemek yetmiyordu — çalıntı kopya çalışmaya devam ederdi.
+    try {
+      await postLogout();
+    } catch {
+      // Sunucuya ulaşılamasa da yerel çıkış yapılsın.
+    }
+    clearAccessToken();
     clearSessionId();
     clearProfile();
     setUser(null);
     router.push("/");
   }, [router]);
-const deleteAccount = useCallback(async () => {
+
+  const logoutAll = useCallback(async () => {
+    try {
+      await postLogoutAll();
+    } catch {
+      // yut
+    }
+    clearAccessToken();
+    clearSessionId();
+    clearProfile();
+    setUser(null);
+    router.push("/");
+  }, [router]);
+
+  const deleteAccount = useCallback(async () => {
     await deleteMe();
-    clearToken();
+    clearAccessToken();
     clearSessionId();
     clearProfile();
     setUser(null);
     router.push("/");
   }, [router]);
-  // Onboarding tercihlerini sunucuya yazar ve döndürdüğü kullanıcıyı state'e
-  // koyar. Önbellek yukarıdaki efektle kendiliğinden eşitleniyor.
+
   const updateProfile = useCallback(async (req: ProfileUpdate) => {
     const fresh = await patchMyProfile(req);
-    setStoredUser(fresh);
     setUser(fresh);
     return fresh;
   }, []);
@@ -108,21 +123,8 @@ const deleteAccount = useCallback(async () => {
     login,
     register,
     logout,
+    logoutAll,
     deleteAccount,
     updateProfile,
   };
 }
-
-    
-
-
-
-
-
-
-
-
-
-
-
-

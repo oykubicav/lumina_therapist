@@ -19,31 +19,92 @@ import type {
 
 
 } from "./types";
-import { getToken } from "./auth";
+import { getAccessToken, setAccessToken, clearAccessToken } from "./auth";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const CLIENT_HEADER = { "X-Neva-Client": "web" };
+let onSessionLost: (() => void) | null = null;
+export function setSessionLostHandler(fn: (() => void) | null): void {
+  onSessionLost = fn;
+}
+// Devam eden yenileme varsa yenisini başlatma, onu bekle.
+//
+// Bu paylaşım şart: üç istek aynı anda 401 alırsa üçü ayrı ayrı
+// /auth/refresh çağırır. İlki rotasyonu yapıp çerezi kapatır, diğer ikisi
+// kapanmış token'la gider. Sunucudaki hoşgörü penceresi bunu yakalıyor ama
+// yine de gereksiz üç istek ve gereksiz üç rotasyon demek.
+let refreshInFlight: Promise<boolean> | null = null;
 
-async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = getToken();
-  const authHeader: HeadersInit = token
-    ? { Authorization: `Bearer ${token}` }
-    : {};
-  const res = await fetch(`${API_BASE}${path}`, {
-    
+
+async function refreshAccessToken(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...CLIENT_HEADER },
+      });
+
+      if (res.status === 409) {
+        // Yarış: başka bir sekme çoktan yeniledi. Çerez zaten güncel,
+        // bir kez daha denemek yeterli.
+        return false;
+      }
+      if (!res.ok) {
+        clearAccessToken();
+        onSessionLost?.();
+        return false;
+      }
+
+      const data = await res.json();
+      setAccessToken(data.access_token);
+      return true;
+    } catch {
+      // Ağ hatası — token'ı silmiyoruz, oturum geçersiz demek değil.
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
+async function rawFetch(path: string, init?: RequestInit): Promise<Response> {
+  const token = getAccessToken();
+  return fetch(`${API_BASE}${path}`, {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...authHeader,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers || {}),
     },
   });
+}
+async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+  let res = await rawFetch(path, init);
+
+  // Access token 15 dakikada bir doluyor. 401 alırsak bir kez yenileyip
+  // isteği tekrarlıyoruz; kullanıcı bunu görmüyor.
+  if (res.status === 401 && !path.startsWith("/auth/refresh")) {
+    const yenilendi = await refreshAccessToken();
+    if (yenilendi) {
+      res = await rawFetch(path, init);
+    }
+  }
+
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new ApiError(res.status, text || res.statusText);
   }
   return res.json();
 }
+
+
 
 export class ApiError extends Error {
   constructor(public status: number, public body: string) {
@@ -208,7 +269,7 @@ export async function deleteMe(): Promise<{ status: string }> {
 export async function postResendVerify(email: string): Promise<{ status: string }> {
   return fetchJson("/auth/resend-verify", {
     method: "POST",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email } ),
   });
 
 }
@@ -237,3 +298,19 @@ export async function deleteMySession(
 }
 
 
+export async function postLogout(): Promise<{ status: string }> {
+  return fetchJson<{ status: string }>("/auth/logout", {
+    method: "POST",
+    headers: CLIENT_HEADER,
+  });
+}
+
+export async function postLogoutAll(): Promise<{
+  status: string;
+  sessions_closed: number;
+}> {
+  return fetchJson("/auth/logout-all", {
+    method: "POST",
+    headers: CLIENT_HEADER,
+  });
+}

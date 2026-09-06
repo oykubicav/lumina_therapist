@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status,Query
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Query
 from sqlalchemy import select, func as sqlfunc
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
@@ -28,6 +28,13 @@ from api.auth.dependencies import get_current_user
 from api.auth.email import send_verification_email, send_password_reset_email
 from api.auth.jwt_utils import encode_token
 from api.auth.passwords import hash_password, verify_password
+from api.auth import refresh_tokens as rt
+from api.auth.cookies import (
+    set_refresh_cookie,
+    clear_refresh_cookie,
+    get_refresh_cookie,
+    require_client_header,
+)
 from api.db.models import User,ChatSession, Turn
 from api.deps import session_store_dep
 from api.session import InMemorySessionStore
@@ -99,6 +106,7 @@ class SessionDetail(BaseModel):
     created_at: str
     last_active: str
     turns: list[SessionTurnView]
+
 def _session_title(first_message: Optional[str], created_at: datetime) -> str:
     """Başlık ilk kullanıcı mesajından türetiliyor — ayrı bir kolon yok.
     Mesaj silinmişse tarihe düşüyor."""
@@ -222,28 +230,34 @@ async def resend_verify(
 
 
 
-
 @router.post("/login", response_model=TokenResponse)
 async def login(
     req: LoginRequest,
+    request: Request,
+    response: Response,
     store: InMemorySessionStore = Depends(session_store_dep),
 ):
     factory = store._SessionLocal()
-    with factory() as db:
+    with factory() as db, db.begin():
         user = db.query(User).filter_by(email=req.email).one_or_none()
         if not user or not verify_password(req.password, user.password_hash):
             raise HTTPException(status_code=401, detail="E-posta ya da şifre hatalı")
-
         if user.deleted_at is not None:
             raise HTTPException(status_code=401, detail="E-posta ya da şifre hatalı")
         if not user.email_verified:
             raise HTTPException(
                 status_code=403,
-                detail="Önce e-posta adresini doğrula. Kayıt sırasında gönderilen linke tıkla."
+                detail="Önce e-posta adresini doğrula. Kayıt sırasında gönderilen linke tıkla.",
             )
-        token = encode_token(user.id)
-        return TokenResponse(access_token=token,user=_to_user_view(user))
 
+        raw_refresh = rt.issue(
+            db, user.id, user_agent=request.headers.get("user-agent")
+        )
+        token = encode_token(user.id)
+        view = _to_user_view(user)
+
+    set_refresh_cookie(response, raw_refresh)
+    return TokenResponse(access_token=token, user=view)
 
         
 @router.get("/me", response_model=UserView)
@@ -475,9 +489,96 @@ async def delete_my_session(
     
     
 
-
+class RefreshResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserView
 
 
 
 
     
+@router.post("/refresh", response_model=RefreshResponse)
+async def refresh(
+    request: Request,
+    response: Response,
+    _: None = Depends(require_client_header),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Refresh çerezini yeni bir access token'a çevirir ve çerezi döndürür.
+
+    Access token İSTEMİYOR — zaten süresi dolduğu için buraya geliniyor.
+    Kimlik doğrulaması tamamen çerezden.
+    """
+    raw = get_refresh_cookie(request)
+    if not raw:
+        raise HTTPException(status_code=401, detail="Oturum bulunamadı")
+
+    factory = store._SessionLocal()
+    with factory() as db, db.begin():
+        sonuc, user_id, yeni_raw = rt.rotate(
+            db, raw, user_agent=request.headers.get("user-agent")
+        )
+        view = None
+        access = None
+        if sonuc == rt.RefreshOutcome.OK:
+            user = db.get(User, user_id)
+            if user is None or user.deleted_at is not None:
+                sonuc = rt.RefreshOutcome.INVALID
+            else:
+                access = encode_token(user.id)
+                view = _to_user_view(user)
+
+    # Hata dallarını transaction DIŞINDA fırlatıyoruz. İçeride fırlatsaydık
+    # rotate()'in REUSE durumunda yaptığı "tüm oturumları kapat" işlemi geri
+    # alınırdı — yani güvenlik tepkisi sessizce kaybolurdu.
+    if sonuc == rt.RefreshOutcome.RACE:
+        # Çerezi SİLMİYORUZ — tarayıcıdaki çerez zaten yenisiyle değişti,
+        # silersek çalışan oturumu kendi elimizle koparırız.
+        raise HTTPException(status_code=409, detail="Yenileme çakıştı, tekrar dene")
+
+    if sonuc != rt.RefreshOutcome.OK:
+        clear_refresh_cookie(response)
+        raise HTTPException(status_code=401, detail="Oturum geçersiz")
+
+    set_refresh_cookie(response, yeni_raw)
+    return RefreshResponse(access_token=access, user=view)
+
+
+@router.post("/logout")
+async def logout(
+    request: Request,
+    response: Response,
+    _: None = Depends(require_client_header),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Bu cihazın oturumunu kapatır.
+
+    Access token istemiyor: süresi dolmuş bir kullanıcı da çıkış
+    yapabilmeli. Çerez zaten kimliği taşıyor.
+    """
+    raw = get_refresh_cookie(request)
+    if raw:
+        factory = store._SessionLocal()
+        with factory() as db, db.begin():
+            rt.revoke_one(db, raw)
+
+    clear_refresh_cookie(response)
+    return {"status": "logged_out"}
+
+
+@router.post("/logout-all")
+async def logout_all(
+    response: Response,
+    user: User = Depends(get_current_user),
+    _: None = Depends(require_client_header),
+    store: InMemorySessionStore = Depends(session_store_dep),
+):
+    """Tüm cihazlardan çıkış. Geçerli access token gerektiriyor —
+    hesabı ele geçirilen kişinin başvuracağı yer burası."""
+    factory = store._SessionLocal()
+    with factory() as db, db.begin():
+        kapanan = rt.revoke_all_for_user(db, user.id)
+
+    clear_refresh_cookie(response)
+    return {"status": "logged_out_all", "sessions_closed": kapanan}

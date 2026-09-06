@@ -124,6 +124,9 @@ class User(Base):
     focus_greeted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     sessions: Mapped[list["ChatSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
+        cascade="all, delete-orphan"
+    )
 
 
 
@@ -330,4 +333,37 @@ class Assessment(Base):
         Index("idx_assessments_session_id", "session_id"),
         Index("idx_assessments_kind", "kind"),
         Index("idx_assessments_taken_at", "taken_at"),
+    )
+class RefreshToken(Base):
+    """Oturum başına bir satır. Ham token saklanmıyor, SHA-256 hash'i tutuluyor —
+    veritabanı sızarsa oturumlar ele geçirilemesin.
+
+    Rotasyon: her yenilemede eski satır revoked_at ile kapanır, replaced_by
+    yenisini gösterir. Bu zincir sayesinde iptal edilmiş bir token tekrar
+    kullanılırsa (çalıntı demektir) kullanıcının tüm oturumları düşürülebilir.
+    """
+
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    replaced_by: Mapped[uuid.UUID | None] = mapped_column(GUID(), nullable=True)
+
+    # Kullanıcıya "hangi cihazlar açık" gösterebilmek için. Ham UA saklanmıyor,
+    # kısaltılmış hali yeterli.
+    user_agent: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("idx_refresh_tokens_user_id", "user_id"),
+        Index("idx_refresh_tokens_hash", "token_hash"),
     )

@@ -19,7 +19,7 @@ _JWT_ALGORITHM = os.environ.get("CBT_JWT_ALGORITHM", "HS256")
 # kısa tutmak da "kötü hissettiğimde açayım" kullanımını bozuyor, insanlar
 # günler arayla giriyor. İptal edilebilirlik için refresh token gerekiyor,
 # o ayrı bir iş.
-_JWT_EXPIRE_HOURS = int(os.environ.get("CBT_JWT_EXPIRE_HOURS", "72"))
+_ACCESS_EXPIRE_MINUTES = int(os.environ.get("CBT_ACCESS_EXPIRE_MINUTES", "15"))
 
 _MIN_SECRET_LEN = 32
 
@@ -39,12 +39,12 @@ def _get_secret() -> str:
     return secret
 
 
-def encode_token(user_id: uuid.UUID, expire_hours: Optional[int] = None) -> str:
-    """User ID → JWT string. Expire 1 hafta default."""
-    hours = expire_hours or _JWT_EXPIRE_HOURS
+def encode_token(user_id: uuid.UUID, expire_minutes: Optional[int] = None) -> str:
+    """User ID → kısa ömürlü access token."""
+    minutes = expire_minutes or _ACCESS_EXPIRE_MINUTES
     payload = {
         "sub": str(user_id),
-        "exp": datetime.now(timezone.utc) + timedelta(hours=hours),
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=minutes),
         "iat": datetime.now(timezone.utc),
     }
     return jwt.encode(payload, _get_secret(), algorithm=_JWT_ALGORITHM)

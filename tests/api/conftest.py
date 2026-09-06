@@ -22,6 +22,10 @@ def _env():
     os.environ["CBT_HASH_SALT"] = "test-salt"
     os.environ["CBT_POLICY_VERSION"] = "0.2"
     os.environ["CBT_JWT_SECRET"] = "test-only-jwt-secret-at-least-32-chars-long"
+    # TestClient http://testserver üzerinden konuşuyor; Secure çerezler
+    # http'de geri gönderilmiyor. Üretimdeki varsayılan 1 ve orada Secure
+    # zorunlu — bunu test_cookie_secure_defaults_on doğruluyor.
+    os.environ["CBT_COOKIE_SECURE"] = "0"
     yield
 
 
@@ -52,9 +56,13 @@ def _clean_db(app):
     because our schema has a nullable FK cycle (sessions ↔ consent_records).
     """
     from api import db as _db
-    from api.db.models import Feedback, Turn, ConsentRecord, ChatSession, User
+    from api.db.models import (
+        Feedback, Turn, ConsentRecord, ChatSession, RefreshToken, User,
+    )
     engine = _db.get_engine()
-    order = [Feedback, Turn, ConsentRecord, ChatSession, User]
+    # SQLite'ta foreign key cascade varsayılan olarak kapalı, o yüzden
+    # çocuk tablolar açıkça listeleniyor. Yeni tablo eklediğinde buraya da ekle.
+    order = [Feedback, Turn, ConsentRecord, ChatSession, RefreshToken, User]
     with engine.begin() as conn:
         for model in order:
             conn.execute(model.__table__.delete())
